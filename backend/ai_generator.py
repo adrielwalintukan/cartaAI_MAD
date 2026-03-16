@@ -48,9 +48,9 @@ def create_invitation_html(data: dict) -> str:
     - Invitation Style: [INVITATION_STYLE]
     - Religion: [RELIGION]
     - Background Music URL: [MUSIC_URL]
+    - Cover Photo URL: [COVER_PHOTO_URL]
     - Bride Photo URL: [BRIDE_PHOTO_URL]
     - Groom Photo URL: [GROOM_PHOTO_URL]
-    - Gallery Photo URLs: [GALLERY_PHOTOS]
     - Special Notes: [SPECIAL_NOTES]
 
     **INSTRUCTIONS FOR AI:**
@@ -60,12 +60,14 @@ def create_invitation_html(data: dict) -> str:
     4. **Event Timing:** Display the times for Akad/Ceremony ([CEREMONY_TIME]) and Reception ([RECEPTION_TIME]) clearly. If a time is "N/A", omit that specific detail.
     5. Use modern web technologies like Tailwind CSS for styling, and include animations, responsive design, and interactivity.
     6. Replace all placeholders (e.g., [BRIDE_NAME]) with the corresponding wedding details provided.
-    5. [GALLERY_PHOTOS_HTML] is already generated - include it in the gallery section without modification.
-        - Show this introductory text above the cards: "Your prayers and blessings are a truly meaningful gift to us. And if giving is an expression of love, you can give a cashless gift. Thank you."
-        - Directly insert the HTML provided in [HADIAH_HTML]. Do NOT alter the layout, classes, or styles of the cards inside [HADIAH_HTML], and do NOT wrap them in any padding or margin containers that would restrict their width.
-        - If [HADIAH_HTML] is empty, do not include this section at all.
-    8. Ensure the HTML is complete, functional, and includes all provided images and URLs.
-    8. Set the background image for cover and hero sections to [BACKGROUND_URL] using CSS background-size: cover to prevent breaking.
+    7. **Photos and Gallery (CRITICAL):**
+        - Use precisely [BRIDE_PHOTO_URL] for the Bride's photo and [GROOM_PHOTO_URL] for the Groom's photo. Do not use dummy images.
+        - [GALLERY_PHOTOS_HTML] is already generated - include it in your HTML exactly as provided instead of writing your own gallery images.
+        - Set the CSS background image for the cover and hero sections to [COVER_PHOTO_URL]. Use `background-size: cover` to prevent breaking. If not available, fallback to [BACKGROUND_URL].
+    8. **Gifts Section:**
+        - Show this introductory text above the gift/bank cards: "Your prayers and blessings are a truly meaningful gift to us. And if giving is an expression of love, you can give a cashless gift. Thank you."
+        - Directly insert the HTML provided in [HADIAH_HTML] beneath the text. Do NOT alter the layout, classes, or styles of the cards inside [HADIAH_HTML], and do NOT wrap them in any padding or margin containers that would restrict their width.
+        - If [HADIAH_HTML] is empty, do not include this gift section at all.
     9. **Guest Personalization (CRITICAL):**
         - On the Cover page, include a section like "Kepada Yth. Bapak/Ibu/Saudara/i:" followed by an element to display the guest name (e.g., `<span id="guest-name-display">Tamu Undangan</span>`).
     10. **RSVP & Guestbook JavaScript Logic (VERY IMPORTANT):**
@@ -146,6 +148,7 @@ def create_invitation_html(data: dict) -> str:
     prompt = prompt.replace("[MUSIC_URL]", music_url)
     prompt = prompt.replace("[BRIDE_PHOTO_URL]", data.get('fotoMempelaiWanita') or 'N/A')
     prompt = prompt.replace("[GROOM_PHOTO_URL]", data.get('fotoMempelaiPria') or 'N/A')
+    prompt = prompt.replace("[COVER_PHOTO_URL]", data.get('fotoCover') or 'N/A')
     prompt = prompt.replace("[GALLERY_PHOTOS_HTML]", gallery_html.strip())
     prompt = prompt.replace("[SPECIAL_NOTES]", data.get('catatanKhusus') or 'N/A')
     prompt = prompt.replace("[BACKGROUND_URL]", background_url)
@@ -247,11 +250,19 @@ def create_invitation_html(data: dict) -> str:
 
     # Add explicit instructions for music and images
     if has_music:
-        prompt += "\n\nIMPORTANT: Include the audio element and music toggle button exactly as shown in the example. The audio src must be set to [MUSIC_URL]. The music toggle button must be visible and functional."
+        prompt += """\n\nIMPORTANT: Include the following audio element and music toggle button EXACTLY as shown below in your HTML. Do not alter the id attributes.
+<audio id="bg-music" loop autoplay>
+    <source src="[MUSIC_URL]" type="audio/mpeg">
+</audio>
+<button id="music-toggle" onclick="document.getElementById('bg-music').paused ? document.getElementById('bg-music').play() : document.getElementById('bg-music').pause()" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; background: white; padding: 10px; border-radius: 50%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 24px;">
+    🎵
+</button>
+Make sure to replace [MUSIC_URL] with the actual URL.
+"""
     else:
         prompt += "\n\nIMPORTANT: Do not include any audio element or music toggle button since no music URL was provided."
 
-    prompt += "\n\nCRITICAL: Use the exact URLs provided for images without any modification. Set the background image of the cover and hero sections to [BACKGROUND_URL]. Use [GROOM_PHOTO_URL] for the groom's photo. Include all gallery images from [GALLERY_PHOTOS_HTML]."
+    prompt += "\n\nCRITICAL: Use the exact URLs provided for images without any modification. Use [BRIDE_PHOTO_URL] for the bride's photo and [GROOM_PHOTO_URL] for the groom's photo. Include all gallery images exactly as provided in [GALLERY_PHOTOS_HTML]."
 
     try:
         response = model.generate_content(prompt)

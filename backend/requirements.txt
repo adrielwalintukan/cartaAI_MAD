@@ -1,9 +1,10 @@
 fastapi
-uvicorn
+uvicorn[standard]
 supabase
 python-dotenv
 requests
 midtransclient
 google-generativeai
 python-multipart
-midtransclient
+pydantic
+httpx

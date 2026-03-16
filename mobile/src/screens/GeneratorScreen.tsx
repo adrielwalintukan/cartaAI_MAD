@@ -55,6 +55,7 @@ type FormState = {
   jenisUndangan: string;
   agama: string;
   catatanKhusus: string;
+  fotoCover: UploadAsset | null;
   fotoMempelaiPria: UploadAsset | null;
   fotoMempelaiWanita: UploadAsset | null;
   galeriFoto: UploadAsset[];
@@ -105,6 +106,7 @@ const initialFormState: FormState = {
   jenisUndangan: '',
   agama: '',
   catatanKhusus: '',
+  fotoCover: null,
   fotoMempelaiPria: null,
   fotoMempelaiWanita: null,
   galeriFoto: [],
@@ -142,6 +144,9 @@ async function uploadFile(file: UploadAsset, userId: string, folder: string) {
 async function uploadAssets(files: FormState, userId: string) {
   const uploadedUrls: Record<string, unknown> = {};
 
+  if (files.fotoCover) {
+    uploadedUrls.fotoCover = await uploadFile(files.fotoCover, userId, 'cover');
+  }
   if (files.fotoMempelaiPria) {
     uploadedUrls.fotoMempelaiPria = await uploadFile(files.fotoMempelaiPria, userId, 'groom');
   }
@@ -249,7 +254,7 @@ export function GeneratorModeScreen({
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const pickImage = async (key: 'fotoMempelaiPria' | 'fotoMempelaiWanita') => {
+  const pickImage = async (key: 'fotoCover' | 'fotoMempelaiPria' | 'fotoMempelaiWanita') => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       Alert.alert('Izin dibutuhkan', 'Akses galeri diperlukan untuk memilih gambar.');
@@ -383,15 +388,20 @@ export function GeneratorModeScreen({
 
       setLoadingMessage('Menghubungi AI untuk membuat file undangan...');
 
+      const {
+        fotoCover,
+        fotoMempelaiPria,
+        fotoMempelaiWanita,
+        galeriFoto,
+        musik,
+        ...restFormData
+      } = formData;
+
       const payload = {
-        ...formData,
+        ...restFormData,
         ...assetUrls,
         tanggalAcara: formData.tanggalAcara.toISOString().split('T')[0],
         hadiah: isPremium ? processedHadiah : [],
-        fotoMempelaiPria: undefined,
-        fotoMempelaiWanita: undefined,
-        galeriFoto: undefined,
-        musik: undefined,
         slug,
         frontendUrl: API_BASE_URL,
       };
@@ -818,6 +828,14 @@ export function GeneratorModeScreen({
                 disabled: !isPremium,
               })}
 
+              {renderUploadCard({
+                title: 'Foto Cover Prewedding',
+                image: formData.fotoCover?.uri,
+                value: formData.fotoCover?.name,
+                onPick: () => pickImage('fotoCover'),
+                onRemove: () => updateField('fotoCover', null),
+                locked: !isPremium,
+              })}
               {renderUploadCard({
                 title: 'Musik Latar',
                 value: formData.musik?.name,
