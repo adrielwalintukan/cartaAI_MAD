@@ -37,6 +37,10 @@ app.include_router(chatbot.router, prefix="/api")
 def read_root():
     return {"message": "Welcome to the CartaAI Backend!"}
 
+@app.on_event("startup")
+async def startup_event():
+    print("App startup complete")
+
 @app.post("/", tags=["Root"])
 async def handle_root_post(request: Request):
     # This is a fallback for misconfigured webhooks that hit the root instead of /api/payments/midtrans-notification
