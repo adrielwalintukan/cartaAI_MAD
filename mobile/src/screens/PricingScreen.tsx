@@ -12,8 +12,11 @@ import { useAuth } from '../context/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
+import { API_BASE_URL } from '../lib/api';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { Alert } from 'react-native';
 
 const pricingPlans = [
   {
@@ -46,7 +49,7 @@ export default function PricingScreen() {
   const { darkMode } = useDarkMode();
   const { session } = useAuth();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
 
   const bg = darkMode ? '#111827' : '#f9fafb';
@@ -56,14 +59,52 @@ export default function PricingScreen() {
   const textMuted = darkMode ? '#9ca3af' : '#6b7280';
 
   const handleAction = async (plan: typeof pricingPlans[0]) => {
-    if (!session) {
+    if (!session?.access_token) {
       router.push('/login');
       return;
     }
+    
     if (plan.id === 'free') {
       router.push('/chat');
-    } else {
-      router.push('/payment');
+      return;
+    }
+
+    setLoading(plan.id);
+    setError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/payments/create-transaction`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ plan: plan.id }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Gagal membuat transaksi.');
+      }
+
+      if (data.redirect_url) {
+        // Navigasi ke layar WebView kita
+        router.push({
+          pathname: '/midtrans-payment' as any,
+          params: { 
+            url: data.redirect_url,
+            order_id: data.order_id
+          }
+        });
+      } else {
+        throw new Error('URL pembayaran tidak ditemukan.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Terjadi kesalahan.');
+      Alert.alert('Error', err.message || 'Terjadi kesalahan saat memproses pembayaran.');
+    } finally {
+      setLoading(null);
     }
   };
 
@@ -156,7 +197,7 @@ export default function PricingScreen() {
                   {/* Tombol aksi */}
                   <TouchableOpacity
                     onPress={() => handleAction(plan)}
-                    disabled={loading}
+                    disabled={!!loading}
                     style={styles.actionWrap}
                     activeOpacity={0.88}
                   >
@@ -166,7 +207,7 @@ export default function PricingScreen() {
                       end={{ x: 1, y: 0 }}
                       style={styles.actionButton}
                     >
-                      {loading ? (
+                      {loading === plan.id ? (
                         <ActivityIndicator color="#fff" size="small" />
                       ) : (
                         <Text style={styles.actionText}>{plan.buttonText}</Text>

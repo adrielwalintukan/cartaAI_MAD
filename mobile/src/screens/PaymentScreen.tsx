@@ -8,15 +8,21 @@ import {
   SafeAreaView,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useDarkMode } from '../context/DarkModeContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
+import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../lib/api';
 
 export default function PaymentScreen() {
   const { darkMode } = useDarkMode();
+  const { session } = useAuth();
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('credit_card');
   const [formData, setFormData] = useState({
     name: '',
@@ -31,32 +37,54 @@ export default function PaymentScreen() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!formData.name || !formData.email || !formData.phone) {
       Alert.alert('Error', 'Silakan lengkapi informasi pribadi');
       return;
     }
 
-    if (paymentMethod === 'credit_card' && (!formData.cardNumber || !formData.expiryDate || !formData.cvv)) {
-      Alert.alert('Error', 'Silakan lengkapi detail kartu kredit');
+    if (!session?.access_token) {
+      Alert.alert('Login Diperlukan', 'Silakan login terlebih dahulu untuk melakukan pembayaran.');
+      router.push('/login');
       return;
     }
 
-    // Simulasi pembayaran berhasil
-    Alert.alert(
-      'Konfirmasi', 
-      'Proses pembayaran ini?', 
-      [
-        { text: 'Batal', style: 'cancel' },
-        { 
-          text: 'Bayar', 
-          onPress: () => router.replace({
-            pathname: '/payment-status',
-            params: { transaction_status: 'settlement', order_id: 'ORDER-12345' }
-          })
-        }
-      ]
-    );
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/payments/create-transaction`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ plan: 'premium_monthly' }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Gagal membuat transaksi.');
+      }
+
+      if (data.redirect_url) {
+        // Buka Midtrans Snap di WebBrowser
+        const result = await WebBrowser.openBrowserAsync(data.redirect_url);
+        
+        // Setelah browser ditutup, kita bisa arahkan ke status (meskipun webhook yang akan update DB)
+        // User mungkin perlu cek history atau reload profile
+        router.push({
+          pathname: '/payment-status',
+          params: { order_id: data.order_id || 'new_transaction' }
+        });
+      } else {
+        throw new Error('URL pembayaran tidak ditemukan.');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Terjadi kesalahan saat memproses pembayaran.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const PaymentOption = ({ value, icon, label, color }: any) => (
@@ -186,8 +214,12 @@ export default function PaymentScreen() {
             style={styles.payButtonContainer}
             onPress={handlePayment}
           >
-            <LinearGradient colors={['#6366f1', '#a855f7']} style={styles.payButton}>
-              <Text style={styles.payButtonText}>Bayar Sekarang - Rp 99.000</Text>
+            <LinearGradient colors={['#6366f1', '#a855f7']} style={[styles.payButton, loading && { opacity: 0.7 }]}>
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.payButtonText}>Bayar Sekarang - Rp 99.000</Text>
+              )}
             </LinearGradient>
           </TouchableOpacity>
         </View>
