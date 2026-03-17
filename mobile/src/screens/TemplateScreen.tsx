@@ -15,19 +15,19 @@ import Footer from '../components/Footer';
 
 const weddingTemplates: Record<string, { id: number; title: string; description: string; image: any }[]> = {
   elegan: [
-    { id: 1, title: 'Elegan Tradisional', description: 'Nuansa mewah dengan motif etnik dan warna keemasan.', image: require('../../assets/templates/elegan_1.webp') },
-    { id: 2, title: 'Elegan Minimalis', description: 'Tampilan lembut dengan dominasi putih dan dekorasi sederhana.', image: require('../../assets/templates/elegan_2.jpg') },
-    { id: 7, title: 'Elegan Mewah', description: 'Latar hitam berkelas dengan aksen emas yang glamor.', image: require('../../assets/templates/elegan_3.webp') },
+    { id: 1, title: 'Elegan Tradisional', description: 'Nuansa mewah dengan motif etnik dan warna keemasan.', image: require('../../assets/templates/elegan_1.png') },
+    { id: 2, title: 'Elegan Minimalis', description: 'Tampilan lembut dengan dominasi putih dan dekorasi sederhana.', image: require('../../assets/templates/elegan_2.png') },
+    { id: 7, title: 'Elegan Mewah', description: 'Latar hitam berkelas dengan aksen emas yang glamor.', image: require('../../assets/templates/elegan_3.png') },
   ],
   formal: [
-    { id: 3, title: 'Formal Klasik', description: 'Ornamen detail dengan nuansa resmi dan berwibawa.', image: require('../../assets/templates/formal_1.webp') },
-    { id: 4, title: 'Formal Modern', description: 'Tampilan sederhana, bersih, namun tetap formal.', image: require('../../assets/templates/formal_2.webp') },
-    { id: 9, title: 'Formal Natural', description: 'Nuansa lembut dengan sentuhan alam yang tetap anggun.', image: require('../../assets/templates/formal_3.webp') },
+    { id: 3, title: 'Formal Klasik', description: 'Ornamen detail dengan nuansa resmi dan berwibawa.', image: require('../../assets/templates/formal_1.png') },
+    { id: 4, title: 'Formal Modern', description: 'Tampilan sederhana, bersih, namun tetap formal.', image: require('../../assets/templates/formal_2.png') },
+    { id: 9, title: 'Formal Natural', description: 'Nuansa lembut dengan sentuhan alam yang tetap anggun.', image: require('../../assets/templates/formal_3.png') },
   ],
   simple: [
-    { id: 10, title: 'Simple Clean', description: 'Desain putih bersih dengan tata letak rapi dan elegan.', image: require('../../assets/templates/simple_1.webp') },
-    { id: 11, title: 'Simple Bold', description: 'Dominasi warna kuat dengan kontras tinggi yang berani.', image: require('../../assets/templates/simple_2.webp') },
-    { id: 12, title: 'Simple Garis & Bunga', description: 'Desain hitam-putih dengan ilustrasi garis dan motif bunga.', image: require('../../assets/templates/simple_3.webp') },
+    { id: 10, title: 'Simple Clean', description: 'Desain putih bersih dengan tata letak rapi dan elegan.', image: require('../../assets/templates/simple_1.png') },
+    { id: 11, title: 'Simple Bold', description: 'Dominasi warna kuat dengan kontras tinggi yang berani.', image: require('../../assets/templates/simple_2.png') },
+    { id: 12, title: 'Simple Garis & Bunga', description: 'Desain hitam-putih dengan ilustrasi garis dan motif bunga.', image: require('../../assets/templates/simple_3.png') },
   ],
 };
 
@@ -102,7 +102,7 @@ export default function TemplateScreen() {
                         shadowColor: darkMode ? '#000' : '#6366f1',
                       },
                     ]}
-                    onPress={() => router.push(`/template-usage/${template.id}` as never)}
+                    onPress={() => router.push(`/template-usage/${template.id}`)}
                     activeOpacity={0.88}
                   >
                     {/* Top accent bar */}

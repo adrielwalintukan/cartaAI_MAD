@@ -9,19 +9,19 @@ const testimonials = [
     text: '"CartaAI membuat undangan pernikahan kami jadi lebih berkesan! Prosesnya cepat, hasilnya cantik."',
     name: 'Maya & Rio',
     role: 'Pasangan Pernikahan',
-    image: require('../../assets/templates/simple_3.jpg'),
+    image: require('../../assets/templates/simple_3.png'),
   },
   {
     text: '"Kami sangat puas dengan layanan CartaAI. Desain undangannya elegan dan sesuai dengan tema pernikahan kami!"',
     name: 'Budi & Sarah',
     role: 'Pasangan Pernikahan',
-    image: require('../../assets/templates/logo_cartaAI.jpg'),
+    image: require('../../assets/templates/logo_cartaAI.png'),
   },
   {
     text: '"Undangan pernikahan kami jadi unik dan berkesan berkat CartaAI. Prosesnya mudah dan hasilnya luar biasa indah!"',
     name: 'Arif',
     role: 'Mempelai laki-laki',
-    image: require('../../assets/templates/logo_cartaAI.jpg'),
+    image: require('../../assets/templates/logo_cartaAI.png'),
   },
 ];
 

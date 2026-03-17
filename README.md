@@ -96,8 +96,12 @@ EXPO_PUBLIC_BACKEND_URL=http://your_laptop_ip:8000
 
 ### 1. Menjalankan Backend
 1. Masuk ke folder backend: `cd backend`
-2. Pasang dependensi: `pip install -r requirements.txt`
-3. Jalankan server: `uvicorn main:app --reload --host 0.0.0.0 --port 8000`
+2. Buat virtual environment (jika belum ada): `python -m venv venv`
+3. Aktifkan virtual environment:
+   - Windows: `venv\Scripts\activate`
+   - Linux/macOS: `source venv/bin/activate`
+4. Pasang dependensi: `pip install -r requirements.txt`
+5. Jalankan server: `uvicorn main:app --reload --host 0.0.0.0 --port 8000`
 
 ### 2. Menjalankan Aplikasi Mobile
 1. Masuk ke folder mobile: `cd mobile`
@@ -108,4 +112,4 @@ EXPO_PUBLIC_BACKEND_URL=http://your_laptop_ip:8000
 ---
 
 ## 💎 Langganan & Pembayaran
-Aplikasi mendukung alur pembayaran **Midtrans Sandbox** untuk upgrade ke fitur Premium secara *real-time*.
+Aplikasi mendukung alur pembayaran **Midtrans Sandbox** untuk upgrade ke fitur Premium secara *real-time*. Kamu bisa melakukan simulasi pembayaran melalui [Midtrans Simulator](https://simulator.sandbox.midtrans.com/).

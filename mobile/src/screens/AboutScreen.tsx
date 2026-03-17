@@ -73,7 +73,7 @@ export default function AboutScreen() {
       >
         {/* ── Hero Banner ─────────────────────────────── */}
         <ImageBackground
-          source={require('../../assets/templates/bg_hero1.jpg')}
+          source={require('../../assets/templates/bg_hero1.png')}
           style={styles.heroBanner}
           resizeMode="cover"
         >

@@ -3,7 +3,7 @@
 
 from fastapi import FastAPI, Request
 from typing import Optional
-from routers import auth, payments, invitations, chatbot
+from routers import auth, payments, invitations, chatbot, midtrans
 from routers.payments import process_midtrans_logic, MidtransWebhookPayload
 
 print("--- SERVER BERJALAN DENGAN KODE VERSI BARU ---")
@@ -32,6 +32,9 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(payments.router, prefix="/api")
 app.include_router(invitations.router, prefix="/api")
 app.include_router(chatbot.router, prefix="/api")
+
+# Midtrans Webhook Router (Tanpa /api prefix agar jalurnya /midtrans/webhook)
+app.include_router(midtrans.router)
 
 @app.get("/", tags=["Root"])
 def read_root():

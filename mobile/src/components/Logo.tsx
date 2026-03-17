@@ -14,7 +14,7 @@ export default function Logo({ size = 48, style, showText = true }: LogoProps) {
   return (
     <View style={[styles.container, style]}>
       <Image
-        source={require('../../assets/templates/logo_cartaAI.jpg')}
+        source={require('../../assets/templates/logo_cartaAI.png')}
         style={{ width: size, height: size, borderRadius: size / 2, resizeMode: 'cover' }}
       />
       {showText && (

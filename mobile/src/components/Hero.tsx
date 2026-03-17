@@ -41,7 +41,7 @@ export default function Hero() {
       {/* Gambar Hero */}
       <View style={styles.imageWrapper}>
         <ImageBackground
-          source={require('../../assets/templates/bg_hero1.jpg')}
+          source={require('../../assets/templates/bg_hero1.png')}
           style={styles.imageCard}
           imageStyle={styles.image}
           resizeMode="cover"

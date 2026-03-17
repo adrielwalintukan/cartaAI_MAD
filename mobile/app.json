@@ -2,12 +2,15 @@
   "expo": {
     "name": "CartaAI",
     "slug": "cartaAI",
+    "owner": "cartaai",
     "scheme": "cartaai",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo_cartaAI.jpg",
+    "icon": "./assets/images/logo_cartaAI.png",
     "userInterfaceStyle": "automatic",
+
     "newArchEnabled": true,
+
     "ios": {
       "supportsTablet": true
     },
@@ -15,21 +18,21 @@
       "package": "com.cartaai.app",
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
-        "foregroundImage": "./assets/images/logo_cartaAI.jpg"
+        "foregroundImage": "./assets/images/logo_cartaAI.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/logo_cartaAI.jpg"
+      "favicon": "./assets/images/logo_cartaAI.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/logo_cartaAI.jpg",
+          "image": "./assets/images/logo_cartaAI.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
@@ -38,11 +41,25 @@
           }
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "2.0.21"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true
+      "reactCompiler": false
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7265d59c-85d8-4ecf-a719-ee9969309482"
+      }
     }
   }
 }
