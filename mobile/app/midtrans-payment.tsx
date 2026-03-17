@@ -28,16 +28,21 @@ export default function MidtransPaymentScreen() {
     const { url: currentUrl } = navState;
     console.log('Current URL:', currentUrl);
 
-    // Deteksi jika diarahkan ke halaman status di frontend kita
-    // Biasanya URL-nya mengandung order_id dan status
-    if (currentUrl.includes('payment-status') || currentUrl.includes('finish') || currentUrl.includes('error') || currentUrl.includes('unfinish')) {
-      // Tunggu sebentar agar user melihat status di web, atau langsung arahkan ke native
-      setTimeout(() => {
-        router.replace({
-          pathname: '/payment-status',
-          params: { order_id: order_id || 'unknown' }
-        });
-      }, 2000);
+    // Deteksi jika diarahkan ke halaman status atau kembali ke merchant
+    // Kita tangkap sebelum ngrok sempat menampilkan warning lagi
+    const isSuccess = currentUrl.includes('payment-status') || currentUrl.includes('finish') || currentUrl.includes('settlement');
+    const isError = currentUrl.includes('error') || currentUrl.includes('failed') || currentUrl.includes('unfinish');
+    const isCancel = currentUrl.includes('cancel');
+
+    if (isSuccess || isError || isCancel) {
+      // Langsung tutup WebView dan arahkan ke layar native Status
+      router.replace({
+        pathname: '/payment-status',
+        params: { 
+          order_id: order_id || 'unknown',
+          transaction_status: isSuccess ? 'settlement' : (isCancel ? 'cancel' : 'failure')
+        }
+      });
     }
   };
 
@@ -53,7 +58,12 @@ export default function MidtransPaymentScreen() {
       
       <View style={styles.webviewContainer}>
         <WebView
-          source={{ uri: url as string }}
+          source={{ 
+            uri: url as string,
+            headers: {
+              'ngrok-skip-browser-warning': 'true'
+            }
+          }}
           onNavigationStateChange={handleNavigationStateChange}
           onLoadStart={() => setLoading(true)}
           onLoadEnd={() => setLoading(false)}

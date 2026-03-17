@@ -1,5 +1,5 @@
 export function normalizeApiBaseUrl(rawUrl?: string) {
-  const fallback = 'http://localhost:8000';
+  const fallback = 'https://cartaaimad-production.up.railway.app';
   const value = (rawUrl || fallback).trim().replace(/\/+$/, '');
 
   if (!value) {

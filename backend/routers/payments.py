@@ -99,7 +99,7 @@ def create_midtrans_transaction(payment: PaymentRequest, current_user: dict = De
 
     # URL Konfigurasi
     backend_url = os.environ.get("BACKEND_URL")
-    frontend_url = os.environ.get("FRONTEND_URL") or "http://localhost:3000"
+    frontend_url = os.environ.get("FRONTEND_URL") or "https://cartaaimad-production.up.railway.app"
     
     if backend_url:
         # Redirect browser ke Frontend
