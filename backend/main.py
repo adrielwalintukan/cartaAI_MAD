@@ -38,7 +38,8 @@ app.include_router(midtrans.router)
 
 @app.get("/", tags=["Root"])
 def read_root():
-    return {"message": "Welcome to the CartaAI Backend!"}
+    return {"message": "Welcome to the CartaAI Backend!", "version": "1.0.1", "deployed_at": "2026-04-09 22:55"}
+
 
 @app.on_event("startup")
 async def startup_event():

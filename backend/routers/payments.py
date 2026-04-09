@@ -35,6 +35,7 @@ class MidtransWebhookPayload(BaseModel):
 def create_midtrans_transaction(payment: PaymentRequest, current_user: dict = Depends(get_current_user)):
     order_id = str(uuid.uuid4())
     user_id = getattr(current_user, 'id', None) or current_user.get('id')
+    user_email = getattr(current_user, 'email', "user@example.com")
     gross_amount = 99000
 
     try:
@@ -43,16 +44,16 @@ def create_midtrans_transaction(payment: PaymentRequest, current_user: dict = De
         subs_res = supabase.table("tbl_m_subs").select("id_subs").eq("subs_name", payment.plan).execute()
         
         if not subs_res.data:
-            # Jika tidak ketemu, coba cari yang namanya mirip atau ambil ID pertama sebagai fallback (hanya untuk testing)
+            # Fallback jika tidak ketemu
             all_subs = supabase.table("tbl_m_subs").select("*").execute()
             if not all_subs.data:
-                raise HTTPException(status_code=400, detail="Master data langganan (tbl_m_subs) kosong. Silakan isi dulu di Supabase.")
+                raise HTTPException(status_code=400, detail="Master data langganan (tbl_m_subs) kosong.")
             id_subs = all_subs.data[0]['id_subs']
             print(f"DEBUG: Plan not found, using fallback: {id_subs}")
         else:
             id_subs = subs_res.data[0]['id_subs']
 
-        # 2. Simpan data transaksi awal
+        # 2. Simpan data transaksi awal di Supabase
         subscription_data = {
             "id_t_subs": order_id,
             "id_user": user_id,
@@ -64,7 +65,10 @@ def create_midtrans_transaction(payment: PaymentRequest, current_user: dict = De
         }
         supabase.table("tbl_t_subs").insert(subscription_data).execute()
 
-        # 3. Buat transaksi Midtrans
+        # 3. Konfigurasi Transaksi Midtrans
+        backend_url = os.environ.get("BACKEND_URL")
+        frontend_url = os.environ.get("FRONTEND_URL") or "https://cartaaimad-production.up.railway.app"
+        
         param = {
             "transaction_details": {
                 "order_id": order_id,
@@ -72,51 +76,32 @@ def create_midtrans_transaction(payment: PaymentRequest, current_user: dict = De
             },
             "customer_details": {
                 "first_name": user_id[:8],
-                "email": getattr(current_user, 'email', "user@example.com")
+                "email": user_email
             }
         }
-        
+
+        # Tambahkan Callbacks dan Notification URL jika backend_url tersedia
+        if backend_url:
+            param["callbacks"] = {
+                "finish": f"{frontend_url.rstrip('/')}/payment-status",
+                "error": f"{frontend_url.rstrip('/')}/payment-status",
+                "pending": f"{frontend_url.rstrip('/')}/payment-status"
+            }
+            # Gunakan jalur baru yang terpusat
+            param["notification_url"] = f"{backend_url.rstrip('/')}/midtrans/webhook"
+            print(f"DEBUG: Transaction created with notification_url: {param['notification_url']}")
+
+        # 4. Buat transaksi di Midtrans
         transaction = snap.create_transaction(param)
         return transaction
         
     except HTTPException as he:
-        # Re-raise HTTPException to keep its status code (e.g. 400)
         raise he
     except Exception as e:
         import traceback
         print(f"ERROR in create-transaction: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Gagal membuat transaksi: {str(e)}")
 
-    param = {
-        "transaction_details": {
-            "order_id": order_id,
-            "gross_amount": gross_amount
-        },
-        "customer_details": {
-            "email": current_user.email
-        }
-    }
-
-    # URL Konfigurasi
-    backend_url = os.environ.get("BACKEND_URL")
-    frontend_url = os.environ.get("FRONTEND_URL") or "https://cartaaimad-production.up.railway.app"
-    
-    if backend_url:
-        # Redirect browser ke Frontend
-        param["callbacks"] = {
-            "finish": f"{frontend_url.rstrip('/')}/payment-status",
-            "error": f"{frontend_url.rstrip('/')}/payment-status",
-            "pending": f"{frontend_url.rstrip('/')}/payment-status"
-        }
-        # Webhook tetap ke Backend (ngrok)
-        param["notification_url"] = f"{backend_url.rstrip('/')}/api/payments/midtrans-notification"
-        print(f"DEBUG: Transaction created with notification_url: {param['notification_url']}")
-
-    try:
-        transaction = snap.create_transaction(param)
-        return {"token": transaction['token']}
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Midtrans Library Error: {str(e)}")
 
 async def process_midtrans_logic(payload: MidtransWebhookPayload):
     print(f"DEBUG: Processing Midtrans payload for Order ID: {payload.order_id}")
