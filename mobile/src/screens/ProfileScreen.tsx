@@ -229,11 +229,11 @@ export default function ProfileScreen() {
         <View style={styles.header}>
           <View style={styles.userRow}>
             <LinearGradient colors={['#6366f1', '#7c3aed']} style={styles.avatar}>
-              <Text style={styles.avatarText}>{session.user.email?.charAt(0).toUpperCase()}</Text>
+              <Text style={styles.avatarText}>{session?.user?.email?.charAt(0).toUpperCase() || '?'}</Text>
             </LinearGradient>
             <View style={{ flex: 1 }}>
               <Text style={[styles.headerTitle, { color: theme.text }]}>
-                Halo, {session.user.email?.split('@')[0]}!
+                Halo, {session?.user?.email?.split('@')[0] || 'Tamu'}!
               </Text>
               <Text style={[styles.headerSubtitle, { color: theme.muted }]}>
                 Selamat datang di Dashboard CartaAI Anda.
@@ -466,7 +466,7 @@ export default function ProfileScreen() {
         visible={shareModalOpen}
         onClose={() => setShareModalOpen(false)}
         slug={shareSlug}
-        sessionToken={session.access_token}
+        sessionToken={session?.access_token || ''}
         apiBaseUrl={API_BASE_URL || ''}
       />
 

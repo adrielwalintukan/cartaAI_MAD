@@ -8,9 +8,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/logo_cartaAI.png",
     "userInterfaceStyle": "automatic",
-
     "newArchEnabled": true,
-
     "ios": {
       "supportsTablet": true
     },
@@ -21,7 +19,8 @@
         "foregroundImage": "./assets/images/logo_cartaAI.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "versionCode": 3
     },
     "web": {
       "output": "static",

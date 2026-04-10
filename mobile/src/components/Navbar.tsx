@@ -20,6 +20,7 @@ export default function Navbar() {
   const insets = useSafeAreaInsets();
   const { darkMode, toggleDarkMode } = useDarkMode();
   const router = useRouter();
+  const { session } = useAuth();
   const theme = useMemo(
     () => ({
       text: darkMode ? '#f9fafb' : '#111827',
@@ -33,6 +34,14 @@ export default function Navbar() {
     }),
     [darkMode]
   );
+
+  const handleProfilePress = () => {
+    if (session) {
+      router.push('/(tabs)/profile');
+    } else {
+      router.push('/login');
+    }
+  };
 
   return (
     <View style={styles.wrapper}>
@@ -72,7 +81,7 @@ export default function Navbar() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() => router.push('/(tabs)/profile')}
+                onPress={handleProfilePress}
                 style={[styles.iconButton, { backgroundColor: theme.hover }]}
                 activeOpacity={0.85}
               >

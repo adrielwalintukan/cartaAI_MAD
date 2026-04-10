@@ -50,29 +50,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      // 1. Ambil data user dasar
+      const { data: userData, error: userError } = await supabase
         .from('tbl_user')
-        .select('*, tbl_t_subs(*)')
+        .select('*')
         .eq('id_user', userId)
-        .eq('tbl_t_subs.is_active', true)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
+      if (userError && userError.code !== 'PGRST116') throw userError;
 
-      if (data) {
-        const subscriptions = Array.isArray((data as any).tbl_t_subs)
-          ? (data as any).tbl_t_subs
-          : [];
+      // 2. Ambil data langganan yang aktif secara terpisah agar lebih akurat
+      const { data: subData, error: subError } = await supabase
+        .from('tbl_t_subs')
+        .select('*')
+        .eq('id_user', userId)
+        .eq('is_active', true)
+        .order('created_date', { ascending: false })
+        .limit(1);
 
-        setUserProfile({
-          ...data,
-          subscription_status: subscriptions.length > 0 ? 'premium' : 'free',
-        });
-      } else {
-        setUserProfile({ subscription_status: 'free' });
-      }
+      if (subError) console.error('Error fetching subscription:', subError);
+
+      const hasActiveSub = subData && subData.length > 0;
+
+      setUserProfile({
+        ...(userData || {}),
+        subscription_status: hasActiveSub ? 'premium' : 'free',
+        active_subscription: hasActiveSub ? subData[0] : null
+      });
+
     } catch (err) {
       console.error('Error fetching profile:', err);
       setUserProfile({ subscription_status: 'free' });
