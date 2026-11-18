@@ -1,7 +1,6 @@
 import { Redirect } from "expo-router";
 import { useAuth } from "../../src/context/AuthContext";
-import FreeGeneratorScreen from "../../src/screens/FreeGeneratorScreen";
-import PremiumGeneratorScreen from "../../src/screens/PremiumGeneratorScreen";
+import { GeneratorModeScreen } from "../../src/screens/GeneratorScreen";
 import { View, ActivityIndicator } from "react-native";
 
 export default function Generator() {
@@ -20,9 +19,9 @@ export default function Generator() {
     return <Redirect href="/login" />;
   }
 
-  if (userProfile?.subscription_status === "premium") {
-    return <PremiumGeneratorScreen />;
-  }
-
-  return <FreeGeneratorScreen />;
+  return (
+    <GeneratorModeScreen
+      mode={userProfile?.subscription_status === "premium" ? "premium" : "free"}
+    />
+  );
 }
