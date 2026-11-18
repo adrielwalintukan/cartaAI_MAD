@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     gemini_api_key: str
     gemini_api_key_fallback: str = ""
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.1-flash-lite"
     gemini_timeout_seconds: int = 90
     gemini_max_output_tokens: int = 32768
 

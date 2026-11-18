@@ -55,7 +55,7 @@ Kelengkapan: jika `groom.name`, `bride.name`, `event_date`, atau `ceremony.locat
 
 ### 3.1 Panggilan
 
-- SDK **`google-genai`**, model `gemini-2.5-flash` (`GEMINI_MODEL`), Q22:
+- SDK **`google-genai`**, model `gemini-3.1-flash-lite` (`GEMINI_MODEL`), Q22:
   `client = genai.Client(api_key=...)` →
   `client.models.generate_content(model=..., contents=<pesan user>, config=types.GenerateContentConfig(system_instruction=<prompt sistem>, temperature=0.8, max_output_tokens=32768, http_options=...timeout 90 dtk))`.
   Nilai `temperature`, `max_output_tokens`, dan anggaran *thinking* adalah titik awal — **TBD disetel setelah uji coba nyata** di F1-8.

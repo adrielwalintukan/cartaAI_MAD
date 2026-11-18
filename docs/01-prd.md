@@ -114,7 +114,7 @@ Setiap kriteria ditulis agar bisa diuji (pytest untuk server, checklist QA manua
 - AC5: kuota generate ulang dicek di server: Gratis 3x, Premium 15x per undangan; percobaan ke-4/ke-16 ditolak.
 - AC6: slug tetap saat generate ulang; versi terakhir + 1 versi sebelumnya tersimpan, ada aksi rollback.
 - AC7: pengguna A tidak bisa menimpa/menghasilkan ulang undangan milik B (termasuk lewat slug yang sama).
-- AC8: model `gemini-2.5-flash` lewat `google-genai`; saat rate limit, memakai key kedua.
+- AC8: model `gemini-3.1-flash-lite` lewat `google-genai`; saat rate limit, memakai key kedua.
 - AC9: slug unik, hanya `a-z0-9-`, panjang batas TBD; slug dipakai ditolak dengan pesan jelas.
 
 ### F-03 Preset gaya / template (M) — Q18
