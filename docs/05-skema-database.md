@@ -4,7 +4,7 @@ Dokumen terkait: [04-arsitektur.md](04-arsitektur.md), [06-api-spec.md](06-api-s
 [07-pipeline-generate-ai.md](07-pipeline-generate-ai.md), [08-rencana-refactor.md](08-rencana-refactor.md).
 Sumber keputusan: [00](00-keputusan-dan-analisis.md) (Q5, Q7, Q13, Q16, Q17, Q20).
 
-SQL migrasi lengkap ada di §7; disalin ke `supabase/migrations/<timestamp>_init.sql` pada tugas F1-1.
+SQL migrasi lengkap ada di §7 (cermin `supabase/migrations/20261118000000_init.sql`, sudah diterapkan ke project `wiyrblibtzufwejmspib`; bila berbeda, berkas migrasi yang benar).
 Skema lama tidak ada di repo, jadi tidak ada migrasi data (data lama diikhlaskan, Q5).
 
 ## 1. Prinsip
@@ -83,9 +83,9 @@ lokal email). Tidak ada kolom `email` (sumber: `auth.users`; backend mengambilny
 | `is_active` | boolean | default true |
 | `sort_order` | int | default 0 |
 
-Seed awal hanya dua: `default` (gaya bawaan gratis, mengikuti arah visual Q10) dan `bebas` (premium; AI menentukan
-dari tema warna user). **Preset gaya lain: TBD** — dirancang bersama `docs/03-design-system.md`/PRD, ditambah lewat
-dashboard Supabase atau migrasi baru (Q23).
+Seed awal: `default` (gratis, arah visual Q10), `elegan`, `formal`, `simple` (premium, dari aset `mobile/assets/templates`;
+`preview_url` masih kosong/TBD), dan `bebas` (premium; AI menentukan dari tema warna user). Brief gaya kelas contoh ini
+boleh disetel ulang lewat dashboard Supabase atau migrasi baru (Q23).
 
 ### 3.3 `invitations`
 | Kolom | Tipe | Constraint |
@@ -138,7 +138,7 @@ Hanya versi yang ditunjuk `current_version_id` dan `previous_version_id` yang di
 | `status` | text | `pending` (URL upload dibuat) \| `ready` (setelah `confirm`) |
 | `created_at` | timestamptz | |
 
-Satu aset per jenis untuk `cover/groom/bride/music` (indeks unik parsial `kind <> 'gallery'`); galeri maks 10
+Satu aset `ready` per jenis untuk `cover/groom/bride/music` (indeks unik parsial `kind <> 'gallery' and status = 'ready'`, agar aset pengganti berstatus `pending` boleh ada sebelum `confirm`); galeri maks 10
 (`GALLERY_MAX_PHOTOS`, ditegakkan service). Aset hanya untuk premium (Q17).
 
 ### 3.6 `guests` (Q20)
@@ -221,7 +221,7 @@ Indeks unik parsial `(invitation_id) where status in ('queued','running')` = sat
 | `invitations (slug)` unik | Penyajian `/u/{slug}` |
 | `invitations (owner_id, created_at desc)` | Daftar undangan |
 | `invitation_versions (invitation_id, version_no)` unik | Nomor versi |
-| `invitation_assets (invitation_id, kind)` unik parsial `kind <> 'gallery'` | Satu aset per jenis |
+| `invitation_assets (invitation_id, kind)` unik parsial `kind <> 'gallery' and status = 'ready'` | Satu aset siap per jenis |
 | `invitation_assets (invitation_id)` | Muat aset |
 | `guests (invitation_id, name_key)` unik | Tanpa duplikat, pencocokan RSVP |
 | `rsvps (invitation_id, created_at desc)` | Daftar ucapan |
@@ -273,12 +273,12 @@ TBD (klien mengonversi ke JPEG sebelum upload bila perlu).
 ## 7. SQL migrasi awal
 
 ```sql
--- supabase/migrations/<timestamp>_init.sql
+-- supabase/migrations/20261118000000_init.sql
 -- CartaAI v2: skema awal. Idempoten sebisanya; jalankan pada project Supabase baru.
 
 -- ---------------------------------------------------------------- utilitas
 create or replace function public.set_updated_at()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql set search_path = '' as $$
 begin
   new.updated_at = now();
   return new;
@@ -333,11 +333,20 @@ insert into public.style_presets (id, name, description, brief, premium_only, so
   ('default', 'Editorial Romantis', 'Gaya bawaan: hangat, rapi, elegan.',
    'Editorial-romantis. Latar ivory/kertas hangat, teks tinta gelap (hijau tua atau cokelat tua), satu warna aksen (terracotta atau emas pudar). Tipografi: serif display (Fraunces atau Cormorant Garamond) untuk judul dan nama, sans bersih (Inter) untuk isi. Banyak ruang kosong, garis tipis, ornamen minimal. Jangan gunakan gradien ungu/biru.',
    false, 0),
+  ('elegan', 'Elegan', 'Mewah dengan aksen emas dan serif klasik.',
+   'Elegan dan mewah. Palet gading/krem atau hitam pekat dengan aksen emas pudar, ornamen garis halus dan bingkai tipis. Tipografi: serif klasik (Cormorant Garamond atau Playfair Display) untuk judul, sans ringan untuk isi. Suasana hangat, berkelas, tidak ramai.',
+   true, 2),
+  ('formal', 'Formal', 'Resmi, rapi, dan profesional.',
+   'Formal dan tertata. Palet navy/hijau tua dengan putih gading, aksen satu warna tegas. Tata letak simetris, bingkai rapi, hierarki jelas. Tipografi: serif tegas (Libre Baskerville) untuk judul, sans bersih (Inter) untuk isi.',
+   true, 3),
+  ('simple', 'Simple', 'Bersih, minimalis, banyak ruang kosong.',
+   'Minimalis modern. Latar putih/abu sangat muda, teks gelap, satu warna aksen lembut (pastel). Banyak ruang kosong, tanpa ornamen berat, sudut membulat halus. Tipografi: sans geometris (Poppins atau Inter) dengan satu serif display untuk nama.',
+   true, 4),
   ('bebas', 'Bebas', 'AI menentukan gaya dari tema warna yang kamu tulis.',
    'Tentukan sendiri palet, mood, dan tipografi berdasarkan tema warna dan catatan gaya dari pengguna. Pertahankan keterbacaan (kontras teks cukup) dan nuansa elegan untuk pernikahan.',
-   true, 1)
+   true, 9)
 on conflict (id) do nothing;
--- Preset gaya lain: TBD (lihat docs/03-design-system.md).
+-- Preset lain: ditambah lewat dashboard Supabase atau migrasi baru (Q23).
 
 -- ---------------------------------------------------------------- invitations
 create table public.invitations (
@@ -365,6 +374,7 @@ create table public.invitations (
 );
 create unique index invitations_slug_key on public.invitations (slug);
 create index invitations_owner_created_idx on public.invitations (owner_id, created_at desc);
+create index invitations_preset_idx on public.invitations (preset_id);
 create trigger invitations_set_updated_at before update on public.invitations
   for each row execute function public.set_updated_at();
 
@@ -387,6 +397,8 @@ alter table public.invitations
     foreign key (current_version_id) references public.invitation_versions(id) on delete set null,
   add constraint invitations_previous_version_fk
     foreign key (previous_version_id) references public.invitation_versions(id) on delete set null;
+create index invitations_current_version_idx on public.invitations (current_version_id);
+create index invitations_previous_version_idx on public.invitations (previous_version_id);
 
 -- ---------------------------------------------------------------- invitation_assets
 create table public.invitation_assets (
@@ -401,7 +413,7 @@ create table public.invitation_assets (
   created_at     timestamptz not null default now()
 );
 create unique index invitation_assets_single_kind
-  on public.invitation_assets (invitation_id, kind) where kind <> 'gallery';
+  on public.invitation_assets (invitation_id, kind) where kind <> 'gallery' and status = 'ready';
 create index invitation_assets_invitation_idx on public.invitation_assets (invitation_id);
 create index invitation_assets_pending_idx
   on public.invitation_assets (created_at) where status = 'pending';
@@ -434,6 +446,7 @@ create table public.rsvps (
 );
 create index rsvps_invitation_created_idx on public.rsvps (invitation_id, created_at desc);
 create index rsvps_invitation_name_idx on public.rsvps (invitation_id, name_key, created_at desc);
+create index rsvps_guest_idx on public.rsvps (guest_id);
 
 -- ---------------------------------------------------------------- orders
 create table public.orders (
@@ -497,6 +510,8 @@ create index generation_jobs_invitation_created_idx
   on public.generation_jobs (invitation_id, created_at desc);
 create index generation_jobs_recovery_idx
   on public.generation_jobs (status, heartbeat_at) where status in ('queued', 'running');
+create index generation_jobs_user_idx on public.generation_jobs (user_id);
+create index generation_jobs_result_version_idx on public.generation_jobs (result_version_id);
 
 -- ---------------------------------------------------------------- chat_usage
 create table public.chat_usage (
@@ -626,6 +641,7 @@ language sql security definer set search_path = public as $$
    where user_id = p_user_id and day = (now() at time zone 'Asia/Jakarta')::date;
 $$;
 
+revoke all on function public.handle_new_user() from public, anon, authenticated;
 revoke all on function public.commit_generation(uuid, text, text, jsonb, int) from public, anon, authenticated;
 revoke all on function public.rollback_invitation(uuid, uuid)                 from public, anon, authenticated;
 revoke all on function public.mark_order_paid(text, text, text, text, int)    from public, anon, authenticated;
