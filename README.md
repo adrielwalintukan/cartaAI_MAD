@@ -34,14 +34,12 @@ CartaAI adalah platform cerdas yang memungkinkan pengguna untuk merancang dan me
 
 ```text
 cartaAI/
-├── backend/                # Aplikasi Server FastAPI (Python)
-│   ├── main.py             # Entry point API
-│   ├── ai_generator.py     # Logika AI Premium
-│   ├── ai_generator_free.py # Logika AI Gratis
-│   ├── dependencies.py     # Middleware & Utils
-│   ├── routers/            # Modul routing API
-│   ├── requirements.txt    # Library Python
-│   └── .env                # Konfigurasi Backend
+├── backend/                # Aplikasi Server FastAPI v2 (Python)
+│   ├── app/                # main, config, routers, services, repos, schemas
+│   ├── tests/              # pytest (tanpa jaringan)
+│   ├── requirements.txt    # Dependensi runtime (versi dipin)
+│   └── .env.example        # Daftar variabel lingkungan (salin ke .env)
+├── supabase/               # Migrasi SQL (supabase/migrations)
 └── mobile/                 # Aplikasi Mobile Expo (React Native)
     ├── app/                # Expo Router (Halaman Utama)
     │   ├── (tabs)/         # Tab Navigation (Home, Template, Buat, Harga)
@@ -72,14 +70,8 @@ cartaAI/
 Untuk menjalankan proyek ini, Anda perlu menyiapkan file `.env` di folder **backend** dan **mobile**.
 
 ### Backend (`/backend/.env`)
-```env
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_KEY=your_supabase_service_role_key
-MIDTRANS_SERVER_KEY=your_midtrans_server_key
-GOOGLE_API_KEY=your_gemini_ai_api_key
-BACKEND_URL=your_backend_public_url
-```
+Salin `backend/.env.example` ke `backend/.env`, lalu isi `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, dan
+`MIDTRANS_SERVER_KEY` (rahasia, jangan di-commit). Daftar lengkap variabel: `docs/04-arsitektur.md` §6.1.
 
 ### Mobile (`/mobile/.env`)
 ```env
@@ -96,12 +88,12 @@ EXPO_PUBLIC_BACKEND_URL=http://your_laptop_ip:8000
 
 ### 1. Menjalankan Backend
 1. Masuk ke folder backend: `cd backend`
-2. Buat virtual environment (jika belum ada): `python -m venv venv`
-3. Aktifkan virtual environment:
-   - Windows: `venv\Scripts\activate`
-   - Linux/macOS: `source venv/bin/activate`
-4. Pasang dependensi: `pip install -r requirements.txt`
-5. Jalankan server: `uvicorn main:app --reload --host 0.0.0.0 --port 8000`
+2. Buat virtual environment: `python -m venv .venv` lalu aktifkan (Windows: `.venv\Scriptsctivate`, Linux/macOS: `source .venv/bin/activate`)
+3. Pasang dependensi: `pip install -r requirements-dev.txt`
+4. Salin `.env.example` ke `.env` dan isi nilai rahasia
+5. Jalankan server: `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000` (dokumentasi API di `/docs` bila `APP_ENV` bukan `production`)
+6. Jalankan tes: `pytest -q`
+7. Skema database: terapkan `supabase/migrations/*.sql` (lihat `supabase/README.md`)
 
 ### 2. Menjalankan Aplikasi Mobile
 1. Masuk ke folder mobile: `cd mobile`

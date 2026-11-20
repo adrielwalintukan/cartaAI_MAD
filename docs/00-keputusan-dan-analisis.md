@@ -70,7 +70,7 @@ Fitur pendukung: daftar tamu, RSVP dan ucapan, pembayaran premium (Midtrans), ch
 | Q19 | Link | `https://<domain-web>/u/<slug>`; Vercel rewrite ke backend. Link tamu: `/u/<slug>?to=Nama+Tamu`. Domain sementara: domain bawaan Vercel. |
 | Q20 | Tamu | Daftar tamu, link personal per tamu, kirim WhatsApp dengan template pesan yang bisa diedit, impor teks/CSV (web), dashboard RSVP (hadir/tidak/ucapan). |
 | Q21 | Auth | Email+password + Google OAuth (Supabase Auth), lupa password. |
-| Q22 | Model AI | Gemini `gemini-3.1-flash-lite` lewat SDK baru `google-genai`; key dari env, fallback ke key kedua saat rate limit. |
+| Q22 | Model AI | Gemini `gemini-3.1-flash-lite` (cadangan `gemini-3.5-flash-lite`; kuota free tier RPD jauh lebih tinggi, 500 vs 20) lewat SDK baru `google-genai`; key dari env, fallback ke key kedua saat rate limit. |
 | Q23 | Admin | Tanpa panel admin di v2; pakai dashboard Supabase. |
 | Q24 | Tes | pytest untuk: webhook Midtrans (signature, aktivasi idempoten), kepemilikan data (user A tak bisa ubah milik B), cek premium & kuota di server, sanitasi HTML. Frontend: checklist QA manual. |
 | Q25 | Fase | F0 dokumen → F1 DB baru + backend → F2 design system + komponen dasar → F3 semua layar web+mobile → F4 deploy (Render/Vercel/EAS) + QA. Tiap fase = PR terpisah ke `refactor/v2`. |

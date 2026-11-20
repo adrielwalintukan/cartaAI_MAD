@@ -1,0 +1,82 @@
+import json
+import re
+
+from app.services.ai.sanitize import SanitizeCtx
+from app.services.ai.slots import PublicCtx, SlotCtx, build_csp, ensure_slots, json_for_script, render_public
+
+PREFIX = "https://test.supabase.co/storage/v1/object/public/invitation-assets/"
+SCTX = SanitizeCtx("inv-1", PREFIX)
+
+
+def doc(body=""):
+    return f"<!DOCTYPE html><html><head></head><body>{body}</body></html>"
+
+
+def count(html, name):
+    return len(re.findall(rf'data-carta="{name}"', html))
+
+
+def test_missing_required_slots_injected():
+    out, w = ensure_slots(doc("<p>x</p>"), SlotCtx(False, False))
+    assert count(out, "rsvp") == 1 and count(out, "countdown") == 1
+    assert "slot_rsvp_missing_injected" in w and "slot_countdown_missing_injected" in w
+
+
+def test_present_slots_untouched():
+    out, w = ensure_slots(doc('<div data-carta="countdown"></div><div data-carta="rsvp"></div>'), SlotCtx(False, False))
+    assert w == [] and count(out, "rsvp") == 1
+
+
+def test_duplicate_slot_reduced():
+    out, w = ensure_slots(doc('<div data-carta="rsvp"></div><div data-carta="rsvp"></div><div data-carta="countdown"></div>'),
+                          SlotCtx(False, False))
+    assert count(out, "rsvp") == 1 and "slot_rsvp_duplicate_removed" in w
+
+
+def test_music_gift_injected_when_data_exists():
+    out, w = ensure_slots(doc(), SlotCtx(True, True))
+    assert count(out, "music") == 1 and count(out, "gift") == 1
+    assert out.index('data-carta="gift"') < out.index('data-carta="rsvp"')
+    assert "slot_music_missing_injected" in w and "slot_gift_missing_injected" in w
+
+
+def test_music_gift_removed_without_data():
+    out, w = ensure_slots(doc('<div data-carta="music"></div><div data-carta="gift"></div>'), SlotCtx(False, False))
+    assert count(out, "music") == 0 and count(out, "gift") == 0
+    assert "slot_music_removed_no_data" in w and "slot_gift_removed_no_data" in w
+
+
+def _public(plan, gifts=None):
+    ctx = PublicCtx("adriel-tiara", plan, "2027-06-12T09:00:00+08:00", "https://api.test", None, gifts or [])
+    return render_public(doc('<div data-carta="rsvp"></div>'), ctx, SCTX, "NONCE123")
+
+
+def test_watermark_free_only():
+    assert "<div data-carta-watermark" in _public("free")
+    assert "<div data-carta-watermark" not in _public("premium")
+
+
+def test_scripts_carry_nonce_and_runtime():
+    out = _public("free")
+    assert out.count('nonce="NONCE123"') == 3 and "__CARTA__" in out and "textContent" in out
+
+
+def test_config_cannot_close_script():
+    out = _public("premium", [{"bank": "</script><script>alert(1)</script>", "account_number": "123456",
+                               "account_name": "A&B"}])
+    assert "</script><script>alert(1)" not in out
+    cfg = re.search(r"window.__CARTA__=(.*?);</script>", out, re.S).group(1)
+    assert json.loads(cfg)["gifts"][0]["bank"].startswith("</script>")
+
+
+def test_json_for_script_escapes():
+    s = json_for_script({"a": "<\u2028>&"})
+    assert "<" not in s and ">" not in s and "\u2028" not in s
+
+
+def test_csp_shape():
+    csp = build_csp("N", "https://abc.supabase.co", "https://api.test/", "https://web.test/")
+    assert "script-src 'nonce-N' https://cdn.tailwindcss.com" in csp and "sandbox allow-scripts" in csp
+    assert "allow-same-origin" not in csp and "connect-src https://api.test;" in csp
+    assert "img-src data: https://abc.supabase.co" in csp and "frame-ancestors 'self' https://web.test" in csp
+    assert "script-src 'none'" in build_csp(None, "https://abc.supabase.co", "https://api.test", "https://web.test")

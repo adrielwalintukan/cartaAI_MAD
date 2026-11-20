@@ -342,3 +342,24 @@ F3-4/F3-11 (pecah generator), F2-5 (kode mati), F2-4 (auth tanpa `tbl_t_subs`).
 | Kerangka tes frontend | F2-3 |
 | Folder `frontend/` (hanya `node_modules`) | F3-11 |
 | CI GitHub Actions | F1-12 (opsional) |
+
+## 6. Catatan implementasi F1
+
+Keputusan yang diambil saat mengerjakan F1 (dicatat di sini; dokumen 05/06 diperbarui seperlunya).
+
+1. **Migrasi** (`supabase/migrations/20261118000000_init.sql`, diterapkan ke project `wiyrblibtzufwejmspib`): (a) indeks unik aset
+   tunggal dibatasi `status = 'ready'` karena `upload-url` membuat baris `pending` sebelum aset lama diganti saat `confirm`;
+   (b) `set_updated_at` diberi `search_path = ''` dan `handle_new_user` dicabut dari `anon/authenticated` (temuan advisor);
+   (c) ditambah indeks untuk FK (`preset_id`, `current/previous_version_id`, `rsvps.guest_id`, `generation_jobs.user_id/result_version_id`);
+   (d) seed preset ditambah `elegan`, `formal`, `simple` (premium, 05 §3.2). Advisor keamanan: hanya INFO `rls_enabled_no_policy` untuk
+   `payment_events` dan `chat_usage` (disengaja, tertutup). Advisor performa: hanya INFO `unused_index` (tabel masih kosong).
+2. **Progres job**: tahap `generating` dilaporkan tetap 50 (06 §2.3 menyebut 30–80 naik per percobaan; tidak ada kolom percobaan Gemini, dipilih yang paling sederhana).
+3. **Zona waktu chat**: hari WIB dihitung dengan offset tetap UTC+7 (WIB tanpa DST), bukan `zoneinfo`, agar tidak butuh paket `tzdata` (Windows).
+4. **`recover_stale_jobs`** hanya mengembalikan id job yang diantrikan ulang; pemanggil (lifespan: thread; `GET /api/jobs/{id}`: `BackgroundTasks`) yang menjalankan `run_job`.
+5. **Startup tidak gagal** bila DB belum terjangkau: pemeliharaan startup (pemulihan job, bersih aset pending) dibungkus try/except dan hanya mencatat peringatan.
+6. **Tidak ada stub kosong per berkas** seperti 08 F1-2; berkas dibuat langsung berisi (tugas dikerjakan satu sesi). `routers/serve.py` memegang `GET /u/{slug}`.
+7. **CSS sanitizer**: karakter `\` (escape CSS) dibuang dari `<style>`/`style=` agar tidak dipakai menyamarkan `url()`/`expression()`; konsekuensi: selector ber-escape ala Tailwind di `<style>` buatan AI tidak berlaku.
+8. **N+1** pada `GET /api/invitations` (hitung RSVP/tamu per undangan) diterima karena maksimal `MAX_INVITATIONS_PER_USER` (5) undangan.
+9. **Webhook** membaca body mentah lalu `json.loads`; body bukan JSON/objek dibalas `403 invalid_signature`. Notifikasi dicatat ke `payment_events` sebelum signature diperiksa (termasuk yang palsu; tidak ada rahasia di payload).
+10. **Gagal Snap** saat `POST /api/payments/orders`: order yang baru dibuat ditandai `failed` agar tidak menghalangi percobaan berikutnya (indeks unik pending).
+11. Tes memakai Supabase palsu dalam memori (`backend/tests/fake_supabase.py`) yang meniru fungsi SQL; tes integrasi (`tests/integration/`) ditulis tetapi **belum pernah dijalankan** (tidak ada kunci service-role).
