@@ -116,7 +116,7 @@ sisa 12). **[Keputusan]**
 | `invitation_id` | uuid | not null, FK `invitations(id)` on delete cascade |
 | `version_no` | int | not null > 0; unik bersama `invitation_id` |
 | `html` | text | not null, ≤ 600.000 karakter; HTML **tersanitasi, slot belum diisi** (07) |
-| `model` | text | not null (mis. `gemini-2.5-flash`) |
+| `model` | text | not null (mis. `gemini-3.1-flash-lite`) |
 | `preset_id` | text | null |
 | `input_snapshot` | jsonb | not null; data + preset saat generate (reproduksibilitas) |
 | `warnings` | jsonb | default `[]`; mis. `["slot_rsvp_missing_injected"]` |
