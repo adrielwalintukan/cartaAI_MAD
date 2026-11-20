@@ -269,6 +269,16 @@ F3-3 (pemilik berkas), tugas lain menambah rute ke daftar itu lewat PR kecil.
 `tsc --noEmit` hijau; tangkapan layar light+dark di deskripsi PR. **Selesai bila (F3-11)**: `git grep -n "tbl_\|supabaseClient\|railway\|#6366f1\|#667eea\|#764ba2" mobile/` kosong; tidak ada berkas > 400 baris (GeneratorScreen 1.522 baris terpecah);
 `npx expo export -p web` sukses. Cabang F3 → PR ke `refactor/v2`.
 
+## 5b. Fase F3b — Situs publik `web/` dan polesan app (Q26)
+
+Dikerjakan di `refactor/v2` setelah F3. Situs publik Next.js di `web/` (Beranda, Template + 9 detail, Harga, Tentang,
+Kebijakan Privasi dan Syarat & Ketentuan sebagai draf); landing Expo (`mobile/app/(marketing)`) dihapus dan `/` di app
+mengarah ke `/app`. App Expo: transisi masuk layar (Reanimated) dan tombol bantuan mengambang (`ChatFab`).
+Skill pengguna `modern-web-ui` mencatat pola dan resep animasinya.
+
+**Selesai bila**: `next build` sukses; uji tangkapan layar 375/768/1440 dan `prefers-reduced-motion` tanpa error konsol
+dan tanpa scroll horizontal; `tsc --noEmit` di `mobile/` bersih.
+
 ## 6. Fase F4 — Deploy dan QA
 
 Cabang: `refactor/v2-f4`. Banyak langkah memerlukan akun/rahasia pemilik (ditandai **Pemilik**).
@@ -276,7 +286,7 @@ Cabang: `refactor/v2-f4`. Banyak langkah memerlukan akun/rahasia pemilik (ditand
 | Tugas | Isi | Paralel dengan |
 |-------|-----|----------------|
 | F4-1 Render | `render.yaml` (root dir `backend`, build `pip install -r requirements.txt`, start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, health check `/healthz`, env 04 §6.1, `PYTHON_VERSION`); **Pemilik** mengisi env rahasia; ping uptime `/healthz?deep=1` tiap ±10 menit; verifikasi ulang batasan free (04 §4) | F4-2, F4-3 |
-| F4-2 Vercel | `vercel.json`: rewrite `/u/:slug` → Render (nomor satu), fallback rute dinamis Expo (`/app/undangan/:id` → `/app/undangan/[id].html`, dst., **verifikasi** hasil `expo export`), header keamanan app; env 04 §6.2; build `npx expo export -p web`, output `dist`; set `CORS_ALLOWED_ORIGINS`/`WEB_BASE_URL` di Render; **verifikasi** cache rewrite (04 §4 poin 5) | F4-1, F4-3 |
+| F4-2 Vercel | Project `web/` (Q26): ganti `HOST-RENDER-TBD` di `web/vercel.json` dengan host Render, set `NEXT_PUBLIC_APP_URL`, build `next build` (output `out`). Project `mobile/`: `vercel.json`: fallback rute dinamis Expo (`/app/undangan/:id` → `/app/undangan/[id].html`, dst., **verifikasi** hasil `expo export`), header keamanan app; env 04 §6.2; build `npx expo export -p web`, output `dist`; set `CORS_ALLOWED_ORIGINS`/`WEB_BASE_URL` di Render; **verifikasi** cache rewrite (04 §4 poin 5) | F4-1, F4-3 |
 | F4-3 EAS | `eas.json` env per profil (`preview` APK internal; `production`), nilai `EXPO_PUBLIC_*`; build Android preview; iOS **TBD** (akun Apple Developer) | F4-1, F4-2 |
 | F4-4 Midtrans sandbox | Set Payment Notification URL ke `/api/payments/webhook`; uji VA, e-wallet, kartu (kasus `fraud_status` kosong = B6), kedaluwarsa, bayar lalu tutup app (sinkronisasi `GET order`); **production: TBD** (akun belum ada) | F4-5 setelah F4-1/2 |
 | F4-5 Rotasi & rahasia | **Pemilik** me-rotate/mencabut kunci lama (Midtrans, Gemini, Supabase lama); pastikan `.env` tidak ter-track (`git ls-files | grep -i env`); cek riwayat git untuk rahasia (**TBD** pembersihan riwayat) | F4-1 … F4-3 |

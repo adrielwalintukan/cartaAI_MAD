@@ -12,9 +12,10 @@ Penanda: **[Keputusan]** = diambil di dokumen ini (bukan dari Q1–Q25, perlu pe
 
 ```mermaid
 flowchart LR
-  subgraph Client["Klien (satu codebase Expo Router)"]
-    IOS["App iOS / Android (EAS Build)"]
-    WEB["Web app (static export, Vercel)"]
+  subgraph Client["Klien"]
+    IOS["App iOS / Android (Expo, EAS Build)"]
+    WEB["Web app (Expo static export, Vercel)"]
+    SITE["Situs publik web/ (Next.js static export, Vercel) — Q26"]
   end
 
   subgraph Vercel["Vercel"]
@@ -71,7 +72,7 @@ Peran tiap komponen:
 | Komponen | Peran | Tidak boleh |
 |----------|-------|-------------|
 | Expo app (iOS/Android/web) | UI, login via Supabase Auth, memanggil FastAPI, upload langsung ke Storage lewat signed URL | Menentukan status premium/kuota; memegang service-role key; menulis tabel langsung |
-| Vercel | Menyajikan static export web; rewrite `/u/:slug` → Render | Menjalankan logika bisnis |
+| Vercel (2 project) | `web/`: situs publik + rewrite `/u/:slug` → Render (Q26). `mobile/`: static export app web | Menjalankan logika bisnis |
 | FastAPI (Render) | Satu-satunya penulis data bisnis; verifikasi JWT; cek kepemilikan, premium, kuota; job generate; webhook; menyajikan undangan | Menampilkan stack trace / rahasia ke klien |
 | Supabase | Auth, Postgres (RLS aktif), Storage | — |
 | Gemini | Membuat HTML undangan (dan jawaban chatbot) | Dipanggil dari klien |
@@ -287,7 +288,7 @@ tabel yang sama via `select ... for update skip locked`) tanpa mengubah skema/AP
 
 ## 5. Penyajian undangan dan keamanan (ringkas)
 
-- `/u/{slug}` dilayani FastAPI, bukan Vercel. `vercel.json` menulis rewrite (urutan: paling atas):
+- `/u/{slug}` dilayani FastAPI, bukan Vercel. Sejak Q26 rewrite ada di `web/vercel.json` (domain situs publik), dengan host sementara `HOST-RENDER-TBD`:
   `{ "source": "/u/:slug", "destination": "https://<host-render>/u/:slug" }` (host Render: TBD sampai F4;
   rewrite tidak bisa membaca env, nilai ditulis saat F4).
 - Karena rewrite membuat halaman undangan **satu origin** dengan aplikasi web, isolasi dilakukan dengan header CSP
@@ -353,7 +354,7 @@ Semua `EXPO_PUBLIC_*` tertanam di bundle: jangan pernah memasukkan rahasia. Untu
   provider Google (client ID/secret dari Google Cloud milik pemilik); template email berbahasa Indonesia (opsional).
 - **Midtrans**: Payment Notification URL = `https://<host-render>/api/payments/webhook` (satu-satunya; transaksi
   tidak lagi menimpa `notification_url`). Sandbox dan production dikonfigurasi terpisah.
-- **Vercel**: variabel di 6.2; `vercel.json` (rewrite `/u/:slug`, fallback rute dinamis Expo — lihat 08, F4-2).
+- **Vercel**: dua project. `web/` (root `web`, framework Next.js, env `NEXT_PUBLIC_APP_URL` = domain app; `vercel.json` berisi rewrite `/u/:slug`). `mobile/` (variabel di 6.2; fallback rute dinamis Expo — lihat 08, F4-2).
 - **Pengujian (pytest)**: semua env diisi nilai palsu di `conftest.py`; tidak memakai kunci asli.
 
 ## 7. TBD dan keputusan terbuka

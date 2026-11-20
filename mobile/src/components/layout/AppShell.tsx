@@ -2,6 +2,7 @@ import { usePathname } from 'expo-router';
 import React from 'react';
 import { View } from 'react-native';
 import { useTheme } from '../../theme';
+import { ChatFab } from './ChatFab';
 import { Sidebar } from './Sidebar';
 import { TabBar } from './TabBar';
 import { activeKey, appNav, tabNav } from './nav';
@@ -17,6 +18,7 @@ export function AppShell({ children, userLabel }: { children: React.ReactNode; u
       {wide ? <Sidebar pathname={pathname} active={active} userLabel={userLabel} compact={bp === 'tablet'} /> : null}
       <View nativeID="main" style={{ flex: 1 }}>{children}</View>
       {wide ? null : <TabBar active={active} />}
+      {pathname.startsWith('/app/bantuan') ? null : <ChatFab aboveTabBar={!wide} />}
     </View>
   );
 }

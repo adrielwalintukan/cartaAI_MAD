@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+/* Token selaras docs/03-design-system.md (palet hangat), dengan skala tipografi ala situs referensi. */
+@theme {
+  --color-paper: #f3eee6;
+  --color-paper-2: #ebe4d8;
+  --color-ink: #1b1714;
+  --color-ink-soft: #5c544c;
+  --color-line: #d8cfc2;
+  --color-accent: #a8482a;
+  --color-accent-soft: #e9cbbd;
+  --color-night: #14110f;
+  --color-night-2: #1f1a17;
+  --color-night-line: #3a332e;
+
+  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@layer base {
+  html { background: var(--color-paper); color: var(--color-ink); -webkit-font-smoothing: antialiased; }
+  body { font-family: var(--font-sans); font-size: 16px; line-height: 1.55; overflow-x: hidden; }
+  ::selection { background: var(--color-accent); color: var(--color-paper); }
+  a, button { -webkit-tap-highlight-color: transparent; }
+  :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; border-radius: 2px; }
+  img { user-select: none; }
+}
+
+@layer components {
+  /* Judul raksasa: tracking negatif, leading rapat (docs/skill modern-web-ui §1). */
+  .display { font-weight: 500; letter-spacing: -0.045em; line-height: 0.92; }
+  .h-xl { font-size: clamp(3.2rem, 11vw, 11.5rem); }
+  .h-lg { font-size: clamp(2.6rem, 7.5vw, 7.5rem); }
+  .h-md { font-size: clamp(2rem, 4.6vw, 4.4rem); }
+  .serif-accent { font-family: var(--font-serif); font-style: italic; font-weight: 400; letter-spacing: -0.02em; }
+  .meta { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .wrap { width: 100%; padding-inline: clamp(16px, 4vw, 56px); }
+  .rule { border-top: 1px solid var(--color-line); }
+  .link-draw { background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat; transition: background-size .6s var(--ease-out-quint); }
+  .link-draw:hover, .link-draw:focus-visible { background-size: 100% 1px; }
+  /* Baris yang di-split: masker agar teks muncul dari bawah. */
+  .line-mask { overflow: hidden; display: block; padding-bottom: 0.06em; margin-bottom: -0.06em; }
+  /* Masker SplitText: beri ruang untuk descender (g, y) agar tidak terpotong. */
+  .sl-mask { padding-bottom: 0.14em; margin-bottom: -0.14em; }
+}
+
+/* Lenis */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

@@ -51,7 +51,7 @@ Fitur pendukung: daftar tamu, RSVP dan ucapan, pembayaran premium (Midtrans), ch
 |---|-------|-----------|
 | Q1 | Tujuan | Produk portofolio yang benar-benar bisa dipakai, skala kecil (tanpa arsitektur enterprise). |
 | Q2 | Website | Web berisi **aplikasi lengkap** (landing, auth, generator, dashboard tamu/RSVP, pembayaran) + halaman undangan publik. |
-| Q3 | Codebase | **Satu codebase Expo Router** untuk iOS, Android, dan web (react-native-web), layout responsif mobile ↔ desktop. Landing memakai static rendering untuk SEO. |
+| Q3 | Codebase | ~~Satu codebase Expo Router termasuk landing~~ **Diubah oleh Q26:** aplikasi (setelah login) tetap satu codebase Expo Router untuk iOS, Android, dan web; situs publik (landing, template, harga, tentang, legal) pindah ke project Next.js `web/`. |
 | Q4 | Backend | **Tetap FastAPI (Python)**, distruktur ulang: service layer, satu client Supabase (service role, hanya di server), auth + cek premium + cek kepemilikan di server. |
 | Q5 | Database | **Project Supabase baru**, skema didesain ulang sebagai migrasi di repo (`supabase/migrations/`), RLS aktif, nama tabel jelas (mis. `profiles`, `invitations`, `invitation_versions`, `guests`, `rsvps`, `orders`, `generation_jobs`). Data lama diikhlaskan. |
 | Q6 | AI generate | **AI tetap membuat HTML undangan utuh.** Output ke customer = link undangan aktif. |
@@ -73,6 +73,7 @@ Fitur pendukung: daftar tamu, RSVP dan ucapan, pembayaran premium (Midtrans), ch
 | Q22 | Model AI | Gemini `gemini-3.1-flash-lite` (cadangan `gemini-3.5-flash-lite`; kuota free tier RPD jauh lebih tinggi, 500 vs 20) lewat SDK baru `google-genai`; key dari env, fallback ke key kedua saat rate limit. |
 | Q23 | Admin | Tanpa panel admin di v2; pakai dashboard Supabase. |
 | Q24 | Tes | pytest untuk: webhook Midtrans (signature, aktivasi idempoten), kepemilikan data (user A tak bisa ubah milik B), cek premium & kuota di server, sanitasi HTML. Frontend: checklist QA manual. |
+| Q26 | Situs publik | (2026-11-21) Situs publik dibangun ulang di `web/` (Next.js 15 static export, Tailwind v4, GSAP + ScrollTrigger + SplitText, Lenis, three.js lewat React Three Fiber) dengan arah visual dari Locomotive, Obys, OHZI, Blobmixer, dan Firstwork: palet hangat, tipografi besar, hero 3D amplop yang terbuka saat di-scroll. App Expo hanya dipoles dengan Reanimated. Konten lama dipulihkan: tentang (visi, misi, keunggulan), fitur, katalog 9 template + halaman detail, footer lengkap, halaman legal (draf), chatbot mengambang di app. Testimoni lama tidak ditampilkan karena bukan testimoni nyata. Rewrite `/u/:slug` pindah ke `web/vercel.json`. |
 | Q25 | Fase | F0 dokumen → F1 DB baru + backend → F2 design system + komponen dasar → F3 semua layar web+mobile → F4 deploy (Render/Vercel/EAS) + QA. Tiap fase = PR terpisah ke `refactor/v2`. |
 
 ## 4. Prinsip kerja
