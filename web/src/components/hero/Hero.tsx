@@ -9,6 +9,8 @@ import { appLink } from "@/lib/site";
 // three.js dimuat setelah halaman tampil; teks hero tidak pernah menunggu WebGL.
 const HeroScene = dynamic(() => import("./HeroScene"), { ssr: false });
 
+const CARDS = ["/templates/card-elegan_1.webp", "/templates/card-formal_1.webp", "/templates/card-simple_2.webp", "/templates/card-elegan_3.webp"];
+
 const STYLES = [
   { name: "Elegan", bg: "#eee4d3" },
   { name: "Formal", bg: "#e5e6df" },
@@ -24,12 +26,16 @@ export function Hero() {
   const [style, setStyle] = useState(0);
   const [mode, setMode] = useState<"pending" | "3d" | "static">("pending");
 
-  useEffect(() => { setMode(prefersReducedMotion() ? "static" : "3d"); }, []);
+  useEffect(() => {
+    // Tanpa WebGL (atau reduced motion) pakai gambar statis.
+    const gl = (() => { try { return !!document.createElement("canvas").getContext("webgl2"); } catch { return false; } })();
+    setMode(prefersReducedMotion() || !gl ? "static" : "3d");
+  }, []);
 
   // Gaya berganti otomatis tiap 3,6 dtk (berhenti saat pengguna memilih sendiri).
   const [auto, setAuto] = useState(true);
   useEffect(() => {
-    if (!auto || mode !== "3d") return;
+    if (!auto || mode === "pending" || prefersReducedMotion()) return;
     const id = setInterval(() => setStyle((s) => (s + 1) % STYLES.length), 3600);
     return () => clearInterval(id);
   }, [auto, mode]);
@@ -63,11 +69,11 @@ export function Hero() {
     <section ref={root} className="relative h-[230svh]" aria-label="Pembuka">
       <div ref={stage} className="sticky top-0 h-svh overflow-hidden" style={{ backgroundColor: STYLES[0].bg }}>
         {/* Objek 3D di belakang judul (pola Blobmixer: teks menimpa objek) */}
-        <div className="absolute inset-0 md:left-[18%]">
-          {mode === "3d" ? <HeroScene progress={progress} style={styleRef} animate /> : null}
+        <div className="absolute inset-0 lg:left-[18%]">
+          {mode === "3d" ? <HeroScene progress={progress} style={styleRef} animate onFail={() => setMode("static")} /> : null}
           {mode === "static" ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src="/templates/card-elegan_1.webp" alt="" className="absolute left-1/2 top-1/2 w-[min(46vw,320px)] -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] rounded-sm shadow-2xl" />
+            <img key={style} src={CARDS[style]} alt="" className="absolute left-1/2 top-1/2 w-[min(46vw,300px)] -translate-x-1/2 -translate-y-1/2 rounded-sm shadow-2xl lg:left-[62%]" />
           ) : null}
         </div>
 
@@ -89,7 +95,7 @@ export function Hero() {
               <MagneticButton href={appLink("/daftar")}>Buat undangan gratis</MagneticButton>
             </div>
 
-            <div className="hero-fade pointer-events-auto flex flex-wrap items-center gap-2" role="group" aria-label="Pilih gaya contoh">
+            <div className="hero-fade pointer-events-auto flex flex-wrap items-center gap-2 md:justify-end" role="group" aria-label="Pilih gaya contoh">
               <span className="meta mr-2 tabular-nums text-ink-soft">({String(style + 1).padStart(2, "0")}/{String(STYLES.length).padStart(2, "0")})</span>
               {STYLES.map((s, i) => (
                 <button key={s.name} type="button" onClick={() => pick(i)} aria-pressed={i === style}

@@ -32,9 +32,12 @@ function Envelope({ progress, style }: { progress: RefObject<number>; style: Ref
   const pocket = useMemo(() => new THREE.ShapeGeometry(pocketShape()), []);
   const flapGeo = useMemo(() => new THREE.ShapeGeometry(flapShape()), []);
   const { pointer, viewport } = useThree();
-  const scale = Math.min(0.8, viewport.width / 5);
-  // Desktop: geser ke kanan agar judul tetap terbaca (teks hanya sedikit menimpa objek).
-  const offsetX = viewport.width > 5 ? viewport.width * 0.13 : 0;
+  // Desktop (>= 1024px): amplop besar di kanan, judul sedikit menimpanya.
+  // Tablet/ponsel: amplop kecil di celah antara judul dan paragraf (maks. ~30% tinggi layar).
+  const wide = typeof window !== "undefined" && window.innerWidth >= 1024;
+  const scale = wide ? Math.min(0.8, viewport.width / 5) : Math.min(viewport.width / 5, (viewport.height * 0.3) / H);
+  const offsetX = wide ? viewport.width * 0.13 : 0;
+  const baseY = wide ? -0.15 : -viewport.height * 0.06;
 
   useFrame((_, dt) => {
     const p = progress.current ?? 0;
@@ -50,11 +53,10 @@ function Envelope({ progress, style }: { progress: RefObject<number>; style: Ref
     const rise = smooth(0.22, 0.8, p);
     card.current.position.y = THREE.MathUtils.damp(card.current.position.y, -0.16 + rise * 2.05, 8, dt);
     card.current.position.z = 0.012 + rise * 0.06;
-    card.current.rotation.z = THREE.MathUtils.damp(card.current.rotation.z, rise * -0.06, 6, dt);
-    // Miring mengikuti kursor + sedikit berputar saat dibuka.
-    group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, -0.32 + pointer.x * 0.28 + p * 0.5, 4, dt);
-    group.current.rotation.x = THREE.MathUtils.damp(group.current.rotation.x, 0.08 - pointer.y * 0.18, 4, dt);
-    group.current.position.y = THREE.MathUtils.damp(group.current.position.y, -0.15 - p * 0.9, 6, dt);
+        // Hampir tegak; hanya condong halus mengikuti kursor.
+    group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, -0.1 + pointer.x * 0.14, 4, dt);
+    group.current.rotation.x = THREE.MathUtils.damp(group.current.rotation.x, 0.03 - pointer.y * 0.08, 4, dt);
+    group.current.position.y = THREE.MathUtils.damp(group.current.position.y, baseY - p * 0.9 * scale, 6, dt);
   });
 
   const paper = "#e8dccb", paperBack = "#d9c9b3", liner = "#a8482a";
@@ -91,7 +93,7 @@ function Envelope({ progress, style }: { progress: RefObject<number>; style: Ref
   );
 }
 
-export default function HeroScene({ progress, style, animate }: { progress: RefObject<number>; style: RefObject<number>; animate: boolean }) {
+export default function HeroScene({ progress, style, animate, onFail }: { progress: RefObject<number>; style: RefObject<number>; animate: boolean; onFail: () => void }) {
   return (
     <Canvas
       dpr={[1, 1.75]}
@@ -99,11 +101,13 @@ export default function HeroScene({ progress, style, animate }: { progress: RefO
       camera={{ position: [0, 0, 6.2], fov: 35 }}
       frameloop={animate ? "always" : "demand"}
       aria-hidden
+      onCreated={({ gl }) => gl.domElement.addEventListener("webglcontextlost", onFail, { once: true })}
+      fallback={null}
     >
       <ambientLight intensity={0.85} />
       <directionalLight position={[3, 4, 5]} intensity={1.6} />
       <directionalLight position={[-4, -2, 2]} intensity={0.5} color="#f1c9b4" />
-      <Float speed={animate ? 1.4 : 0} rotationIntensity={0.25} floatIntensity={0.5}>
+      <Float speed={animate ? 1.4 : 0} rotationIntensity={0.08} floatIntensity={0.35}>
         <Envelope progress={progress} style={style} />
       </Float>
     </Canvas>

@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   output: "export",
   images: { unoptimized: true },
   trailingSlash: false,
+  // StrictMode me-mount Canvas R3F dua kali di dev; mount kedua memakai konteks WebGL yang sudah hilang.
+  reactStrictMode: false,
 };
 
 export default nextConfig;
