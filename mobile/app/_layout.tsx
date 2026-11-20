@@ -5,9 +5,6 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import React, { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ToastProvider } from '../src/components/ui';
-// Provider lama: hanya untuk layar lama sampai dihapus di F3-11. Layar baru memakai Theme/Auth baru.
-import { AuthProvider as LegacyAuthProvider } from '../src/context/AuthContext';
-import { DarkModeProvider as LegacyDarkModeProvider } from '../src/context/DarkModeContext';
 import { AuthProvider } from '../src/features/auth';
 import { queryClient } from '../src/lib/queryClient';
 import { ThemeProvider, useAppFonts, useTheme } from '../src/theme';
@@ -35,13 +32,9 @@ export default function RootLayout() {
       <ThemeProvider>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <LegacyAuthProvider>
-              <LegacyDarkModeProvider>
-                <ToastProvider>
-                  <ThemedStack />
-                </ToastProvider>
-              </LegacyDarkModeProvider>
-            </LegacyAuthProvider>
+            <ToastProvider>
+              <ThemedStack />
+            </ToastProvider>
           </AuthProvider>
         </QueryClientProvider>
       </ThemeProvider>
