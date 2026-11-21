@@ -110,12 +110,34 @@
     });
   });
 
-  // open
-  all("open").forEach(function (a) {
+  // reveal saat scroll (kit desain); tanpa IntersectionObserver langsung tampil
+  var root = document.documentElement;
+  var still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  root.classList.add("carta-js");
+  var rev = Array.prototype.slice.call(document.querySelectorAll(".carta-reveal"));
+  if (!("IntersectionObserver" in window) || still) rev.forEach(function (n) { n.classList.add("carta-in"); });
+  else {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (x) { if (x.isIntersecting) { x.target.classList.add("carta-in"); io.unobserve(x.target); } });
+    }, { threshold: 0.15, rootMargin: "0px 0px -5% 0px" });
+    rev.forEach(function (n) { io.observe(n); });
+  }
+
+  // open: sampul mengunci scroll sampai dibuka; tanpa tombol open tidak ada kunci
+  var opens = all("open");
+  var cover = opens.length && opens[0].closest("section,header");
+  if (cover && cover !== document.body) root.classList.add("carta-locked");
+  opens.forEach(function (a) {
     a.addEventListener("click", function (e) {
       startMusic();
       var h = a.getAttribute("href");
-      if (h && h.charAt(0) === "#") { var t = document.getElementById(h.slice(1)); if (t) { e.preventDefault(); t.scrollIntoView({ behavior: "smooth" }); } }
+      var t = h && h.charAt(0) === "#" ? document.getElementById(h.slice(1)) : null;
+      if (t || cover) e.preventDefault();
+      if (cover && root.classList.contains("carta-locked")) {
+        root.classList.remove("carta-locked");
+        cover.classList.add("carta-cover-out");
+        setTimeout(function () { cover.style.display = "none"; if (t) t.scrollIntoView(); else window.scrollTo(0, 0); }, still ? 0 : 900);
+      } else if (t) t.scrollIntoView({ behavior: "smooth" });
     });
   });
 

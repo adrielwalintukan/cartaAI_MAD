@@ -6,7 +6,8 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup, Comment, Doctype, NavigableString, Tag
 
 MAX_HTML_CHARS = 600_000
-SLOT_NAMES = {"rsvp", "countdown", "guest-name", "music", "gift", "open"}
+SLOT_NAMES = {"rsvp", "countdown", "guest-name", "music", "gift", "open", "ornament"}
+KIND_RE = re.compile(r"^[a-z-]{2,30}$")
 TAILWIND_SRC = "https://cdn.tailwindcss.com"
 FONT_HOSTS = {"fonts.googleapis.com", "fonts.gstatic.com"}
 
@@ -152,6 +153,9 @@ def _process(node, ctx: SanitizeCtx) -> None:
             new["style"] = clean_css(val, ctx)
         elif a == "data-carta":
             if val in SLOT_NAMES:
+                new[a] = val
+        elif a == "data-kind":
+            if KIND_RE.match(val):
                 new[a] = val
         elif a in GLOBAL_ATTRS or a.startswith("aria-"):
             new[a] = val

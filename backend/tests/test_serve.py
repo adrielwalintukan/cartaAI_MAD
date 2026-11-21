@@ -61,3 +61,11 @@ def test_gifts_only_for_premium(client, db, make_inv):
 def test_event_time_zone(client, db, make_inv):
     publish(db, make_inv)
     assert "2027-06-12T09:00:00+08:00" in client.get("/u/adriel-tiara").text
+
+
+def test_ornament_filled_on_serve_csp_unchanged(client, db, make_inv):
+    publish(db, make_inv)
+    db.tables["invitation_versions"][-1]["html"] = HTML.replace("</body>", '<div data-carta="ornament" data-kind="wave"></div></body>')
+    r = client.get("/u/adriel-tiara")
+    assert r.status_code == 200 and "<svg" in r.text
+    assert "img-src" in r.headers["content-security-policy"] and "'unsafe-eval'" not in r.headers["content-security-policy"]

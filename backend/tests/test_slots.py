@@ -80,3 +80,42 @@ def test_csp_shape():
     assert "allow-same-origin" not in csp and "connect-src https://api.test;" in csp
     assert "img-src data: https://abc.supabase.co" in csp and "frame-ancestors 'self' https://web.test" in csp
     assert "script-src 'none'" in build_csp(None, "https://abc.supabase.co", "https://api.test", "https://web.test")
+
+
+# ---- kit desain (Q27)
+from app.services.ai import ornaments  # noqa: E402
+from app.services.ai.slots import _STYLE, runtime_js  # noqa: E402
+
+PCTX = PublicCtx("adriel-tiara", "premium", None, "https://api.test")
+
+
+def test_ensure_slots_keeps_multiple_ornaments():
+    out, w = ensure_slots(doc('<div data-carta="ornament" data-kind="rings"></div>'
+                              '<div data-carta="ornament" data-kind="wave"></div>'), SlotCtx(False, False))
+    assert count(out, "ornament") == 2 and not any("ornament" in x for x in w)
+
+
+def test_render_public_fills_known_ornament_and_empties_unknown():
+    out = render_public(doc('<div data-carta="ornament" data-kind="rings"></div>'
+                            '<div data-carta="ornament" data-kind="naga"><p>isi</p></div>'), PCTX, SCTX, "N")
+    assert out.count("<svg") == 1 and "<p>isi</p>" not in out
+
+
+def test_all_kinds_present_and_safe():
+    assert set(ornaments.KINDS) == {"floral-corner", "floral-divider", "leaf-divider", "arch-frame",
+                                    "batik-band", "rings", "dots-divider", "wave"}
+    for svg in ornaments.KINDS.values():
+        assert svg.startswith("<svg") and "currentColor" in svg
+        assert "<script" not in svg and "href" not in svg and " on" not in svg
+
+
+def test_kit_size_budget():
+    assert len(_STYLE) + len(runtime_js()) + sum(len(v) for v in ornaments.KINDS.values()) < 25_000
+
+
+def test_kit_css_classes_and_reduced_motion():
+    for token in (".carta-reveal", ".carta-in", ".carta-delay-3", ".carta-reveal-zoom", ".carta-frame",
+                  ".carta-grain", ".carta-display", "prefers-reduced-motion"):
+        assert token in _STYLE
+    # tanpa JS (kelas carta-js belum ada) konten tidak disembunyikan
+    assert ".carta-js .carta-reveal{" in _STYLE and "\n.carta-reveal{opacity:0" not in _STYLE

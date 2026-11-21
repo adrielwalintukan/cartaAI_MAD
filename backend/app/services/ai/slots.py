@@ -7,6 +7,7 @@ from functools import lru_cache
 from pathlib import Path
 from urllib.parse import urlparse
 
+from app.services.ai import ornaments
 from app.services.ai.sanitize import SanitizeCtx, parse, sanitize, serialize
 
 REQUIRED = ("countdown", "rsvp")
@@ -28,7 +29,7 @@ def ensure_slots(html: str, ctx: SlotCtx) -> tuple[str, list[str]]:
         found.setdefault(el["data-carta"], []).append(el)
 
     for name, els in found.items():
-        if name not in ("guest-name", "open") and len(els) > 1:
+        if name not in ("guest-name", "open", "ornament") and len(els) > 1:
             for dup in els[1:]:
                 del dup["data-carta"]
             warnings.append(f"slot_{name}_duplicate_removed")
@@ -100,12 +101,34 @@ _STYLE = (
     ".carta-cd{display:flex;gap:.75rem;justify-content:center}"
     ".carta-cd b{display:block;font-size:1.8rem;font-family:var(--carta-font-display,inherit)}"
     ".carta-wish{border-top:1px solid var(--carta-muted,#bbb);padding:.5rem 0;text-align:left}"
+    # Kit desain (Q27). Reveal hanya aktif bila runtime memasang .carta-js, jadi tanpa JS konten tetap tampil.
+    ".carta-js .carta-reveal{opacity:0;transform:translateY(28px);"
+    "transition:opacity .9s cubic-bezier(.23,1,.32,1),transform .9s cubic-bezier(.23,1,.32,1)}"
+    ".carta-js .carta-reveal-left{transform:translateX(-36px)}.carta-js .carta-reveal-right{transform:translateX(36px)}"
+    ".carta-js .carta-reveal-zoom{transform:scale(.92)}"
+    ".carta-js .carta-reveal.carta-in{opacity:1;transform:none}"
+    ".carta-delay-1{transition-delay:.15s!important}.carta-delay-2{transition-delay:.3s!important}"
+    ".carta-delay-3{transition-delay:.45s!important}"
+    ".carta-frame{outline:1px solid var(--carta-accent,currentColor);outline-offset:-12px;"
+    "box-shadow:inset 0 0 0 18px transparent,inset 0 0 0 19px var(--carta-accent,currentColor)}"
+    ".carta-grain{background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E"
+    "%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E"
+    "%3Crect width='160' height='160' filter='url(%23n)' opacity='.08'/%3E%3C/svg%3E\")}"
+    ".carta-display{font-family:var(--carta-font-display,inherit);letter-spacing:-.02em;line-height:1}"
+    "[data-carta=ornament]{display:block;color:var(--carta-accent,currentColor);pointer-events:none}"
+    "[data-carta=ornament] svg{display:block;width:100%;height:auto}"
+    "html.carta-locked,html.carta-locked body{overflow:hidden}"
+    ".carta-cover-out{transform:translateY(-100%)!important;transition:transform .9s cubic-bezier(.76,0,.24,1)}"
+    "@media (prefers-reduced-motion:reduce){.carta-js .carta-reveal{opacity:1;transform:none;transition:none}"
+    ".carta-cover-out{transition:none}}"
 )
 
 
 def render_public(html: str, ctx: PublicCtx, sctx: SanitizeCtx, nonce: str) -> str:
     """Sanitasi ulang + suntik style, config, runtime, watermark sebelum </body> (07 §5.3)."""
-    clean = sanitize(html, sctx)
+    soup = parse(sanitize(html, sctx))
+    ornaments.fill(soup)  # SVG sistem diisi setelah sanitasi
+    clean = serialize(soup)
     config = {"slug": ctx.slug, "api": ctx.api_base.rstrip("/"), "eventAt": ctx.event_at, "plan": ctx.plan,
               "musicUrl": ctx.music_url, "gifts": ctx.gifts}
     parts = [

@@ -140,3 +140,12 @@ def test_extract_document_rejects(raw):
 def test_extract_requires_names():
     with pytest.raises(InvalidOutput):
         extract_document(_doc(), ("Adriel", "Budi"))
+
+
+def test_ornament_slot_kind_and_kit_classes_kept():
+    out = s('<div data-carta="ornament" data-kind="rings" class="carta-reveal carta-delay-2"></div>')
+    assert 'data-carta="ornament"' in out and 'data-kind="rings"' in out and "carta-delay-2" in out
+
+
+def test_bad_data_kind_dropped():
+    assert "data-kind" not in s('<div data-carta="ornament" data-kind="x&quot; onload=&quot;y"></div>')
