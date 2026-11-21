@@ -46,6 +46,7 @@ function List({ limit }: { limit?: number }) {
                 primary={i.status === 'published' ? { label: 'Bagikan', onPress: () => go(i.id) } : { label: 'Lanjutkan', onPress: () => go(i.id) }}
                 secondary={{ label: 'Tamu', onPress: () => go(i.id, '/tamu') }}
                 menu={[
+                  ...(i.plan === 'free' ? [{ label: 'Upgrade ke Premium', onPress: () => go(i.id, '/upgrade') }] : []),
                   { label: 'Ubah data', onPress: () => go(i.id, '/edit') },
                   { label: 'Hasil RSVP', onPress: () => go(i.id, '/rsvp') },
                   { label: 'Hapus', danger: true, onPress: () => setDel(i) },
