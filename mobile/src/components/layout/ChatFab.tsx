@@ -1,10 +1,15 @@
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { createContext, useContext } from 'react';
 import { Pressable } from 'react-native';
 import Animated, { Easing, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme';
 import { Icon } from '../ui';
+
+/** Ruang bawah yang harus disisakan layar agar isi terakhir (mis. tombol Lanjut) tidak tertutup tombol bantuan. */
+export const ChatFabInset = createContext(0);
+export const useChatFabInset = () => useContext(ChatFabInset);
+export const CHAT_FAB_CLEARANCE = 56 + 24 + 16; // tinggi tombol + jarak bawah + napas
 
 /** Tombol bantuan mengambang di area login (seperti ChatbotFAB versi lama), membuka /app/bantuan. */
 export function ChatFab({ aboveTabBar }: { aboveTabBar: boolean }) {

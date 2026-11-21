@@ -45,7 +45,7 @@ Setelah login dengan akun uji, langkah "Gaya" menampilkan:
    - Prompt sudah mewajibkan kontras ≥ 4.5:1.
    - Belum diperbaiki.
 2. `gemini-3.5-flash` sering timeout (504 setelah sekitar 90 detik) saat permintaan sedang ramai. Akibatnya satu generate bisa memakan sekitar 2–3 menit sebelum beralih ke cadangan.
-3. Di luar lingkup: tombol chat mengambang di app menutupi tombol "Lanjut" di bagian bawah form (lihat `form-2-penuh.png`).
+3. Tombol chat mengambang sempat menutupi tombol "Lanjut" di form; diperbaiki dengan ruang bawah otomatis pada `Screen` di dalam AppShell (`form-2-penuh.png` memperlihatkan hasil setelah perbaikan).
 
 ## Bukti
 Gambar di folder `2026-11-21-desain-undangan-ai/`:

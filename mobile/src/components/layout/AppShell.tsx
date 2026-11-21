@@ -2,7 +2,7 @@ import { usePathname } from 'expo-router';
 import React from 'react';
 import { View } from 'react-native';
 import { useTheme } from '../../theme';
-import { ChatFab } from './ChatFab';
+import { CHAT_FAB_CLEARANCE, ChatFab, ChatFabInset } from './ChatFab';
 import { Sidebar } from './Sidebar';
 import { TabBar } from './TabBar';
 import { activeKey, appNav, tabNav } from './nav';
@@ -13,12 +13,13 @@ export function AppShell({ children, userLabel }: { children: React.ReactNode; u
   const pathname = usePathname();
   const wide = bp !== 'mobile';
   const active = activeKey(wide ? appNav : tabNav, pathname);
+  const fab = !pathname.startsWith('/app/bantuan');
   return (
     <View style={{ flex: 1, flexDirection: wide ? 'row' : 'column', backgroundColor: colors.bg }}>
       {wide ? <Sidebar pathname={pathname} active={active} userLabel={userLabel} compact={bp === 'tablet'} /> : null}
-      <View nativeID="main" style={{ flex: 1 }}>{children}</View>
+      <View nativeID="main" style={{ flex: 1 }}><ChatFabInset.Provider value={fab ? CHAT_FAB_CLEARANCE : 0}>{children}</ChatFabInset.Provider></View>
       {wide ? null : <TabBar active={active} />}
-      {pathname.startsWith('/app/bantuan') ? null : <ChatFab aboveTabBar={!wide} />}
+      {fab ? <ChatFab aboveTabBar={!wide} /> : null}
     </View>
   );
 }
