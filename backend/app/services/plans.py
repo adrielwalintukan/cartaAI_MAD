@@ -24,12 +24,8 @@ def check_generation_quota(plan: str, used: int, s: Settings) -> None:
 
 
 def premium_fields_used(data: dict) -> list[str]:
-    out = []
-    if data.get("color_theme"):
-        out.append("color_theme")
-    if data.get("gifts"):
-        out.append("gifts")
-    return out
+    # Q27: gaya, tema warna, dan keinginan desain untuk semua paket.
+    return ["gifts"] if data.get("gifts") else []
 
 
 def check_premium_fields(plan: str, data: dict, preset_premium_only: bool = False) -> None:

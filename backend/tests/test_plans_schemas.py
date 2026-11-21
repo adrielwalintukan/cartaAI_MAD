@@ -56,3 +56,14 @@ def test_missing_and_title():
 def test_account_number_validated():
     with pytest.raises(ValidationError):
         InvitationData.model_validate({"gifts": [{"bank": "BCA", "account_number": "abc"}]})
+
+
+def test_design_notes_validated_and_trimmed():
+    assert InvitationData.model_validate({"design_notes": "  nuansa batik  "}).design_notes == "nuansa batik"
+    assert len(InvitationData.model_validate({"design_notes": "x" * 400}).design_notes) == 300
+
+
+def test_color_theme_and_design_notes_not_premium():
+    assert plans.premium_fields_used({"color_theme": "sage", "design_notes": "bunga"}) == []
+    plans.check_premium_fields("free", {"color_theme": "sage"})
+    assert plans.premium_fields_used({"gifts": [{}]}) == ["gifts"]

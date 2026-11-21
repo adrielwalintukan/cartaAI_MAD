@@ -34,7 +34,7 @@ def test_premium_preset_and_fields_on_free(client):
         "slug": "dua-dua", "data": {**VALID_DATA, "gifts": [{"bank": "BCA", "account_number": "12345", "account_name": "A"}]}})
     assert r.status_code == 403
     r = client.post("/api/invitations", headers=auth(A), json={"slug": "tiga-tiga", "data": {**VALID_DATA, "color_theme": "sage"}})
-    assert r.status_code == 403
+    assert r.status_code == 201  # Q27: tema warna untuk semua paket
 
 
 def test_unknown_preset_422(client):
@@ -67,8 +67,9 @@ def test_patch_does_not_touch_slug_plan(client):
 def test_patch_premium_fields_rejected_on_free(client):
     inv = create(client).json()
     assert client.patch(f"/api/invitations/{inv['id']}", headers=auth(A), json={"preset_id": "bebas"}).status_code == 403
-    assert client.patch(f"/api/invitations/{inv['id']}", headers=auth(A),
-                        json={"data": {**VALID_DATA, "color_theme": "x"}}).status_code == 403
+    r = client.patch(f"/api/invitations/{inv['id']}", headers=auth(A),
+                     json={"data": {**VALID_DATA, "color_theme": "x", "design_notes": "bunga"}})
+    assert r.status_code == 200 and r.json()["data"]["design_notes"] == "bunga"
 
 
 def test_other_user_gets_404(client):

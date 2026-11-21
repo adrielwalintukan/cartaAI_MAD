@@ -69,6 +69,7 @@ class InvitationData(BaseModel):
     reception: Reception | None = None
     notes: Text(500, multiline=True) = None
     color_theme: Text(80) = None
+    design_notes: Text(300, multiline=True) = None
     gifts: list[Gift] = Field(default_factory=list, max_length=5)
 
     @field_validator("event_date")

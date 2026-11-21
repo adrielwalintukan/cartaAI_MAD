@@ -156,3 +156,12 @@ def test_rollback_swaps_versions(client, make_inv, ai, db):
     assert r.status_code == 200 and r.json()["current_version"]["id"] == prev
     assert db.one("invitations", id=inv["id"])["previous_version_id"] == cur
     assert db.one("invitations", id=inv["id"])["generations_used"] == 2  # rollback tak memakai kuota
+
+
+def test_free_snapshot_keeps_design_input_drops_gifts(db, make_inv, settings):
+    inv = make_inv()
+    inv["data"] = {**inv["data"], "color_theme": "sage", "design_notes": "bunga",
+                   "gifts": [{"bank": "BCA", "account_number": "12345", "account_name": "A"}]}
+    snap = generation.build_snapshot(settings, inv, {"id": "default", "brief": "b"}, [])
+    assert snap["data"]["color_theme"] == "sage" and snap["data"]["design_notes"] == "bunga"
+    assert "gifts" not in snap["data"]

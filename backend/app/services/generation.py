@@ -39,7 +39,6 @@ def build_snapshot(s: Settings, inv: dict, preset: dict, assets: list[dict]) -> 
     premium = inv["plan"] == "premium"
     data = dict(inv["data"])
     if not premium:
-        data.pop("color_theme", None)
         data.pop("gifts", None)
     by_kind: dict = {"gallery": []}
     for a in assets if premium else []:
