@@ -13,7 +13,8 @@ export function AppShell({ children, userLabel }: { children: React.ReactNode; u
   const pathname = usePathname();
   const wide = bp !== 'mobile';
   const active = activeKey(wide ? appNav : tabNav, pathname);
-  const fab = !pathname.startsWith('/app/bantuan');
+  // Bantuan sudah berupa chat; checkout punya tombol bayar menempel di bawah.
+  const fab = !pathname.startsWith('/app/bantuan') && !pathname.endsWith('/upgrade');
   return (
     <View style={{ flex: 1, flexDirection: wide ? 'row' : 'column', backgroundColor: colors.bg }}>
       {wide ? <Sidebar pathname={pathname} active={active} userLabel={userLabel} compact={bp === 'tablet'} /> : null}

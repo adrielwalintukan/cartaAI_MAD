@@ -1,8 +1,8 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import { Platform, View } from 'react-native';
-import { PricingCard } from '../../../components/domain';
-import { Button, Card, EmptyState, Screen, Skeleton, Text, useToast } from '../../../components/ui';
+import { Button, Card, EmptyState, Icon, Screen, Skeleton, Text, useToast } from '../../../components/ui';
+import { formatRupiah } from '../../../lib/format';
 import { FREE_FEATURES, PREMIUM_FEATURES, PREMIUM_PRICE } from '../../../lib/plans';
 import { useTheme } from '../../../theme';
 import { useInvitation } from '../../invitations/hooks';
@@ -13,33 +13,82 @@ export function UpgradeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const toast = useToast();
-  const { space } = useTheme();
+  const { space, colors, radius, bp } = useTheme();
   const inv = useInvitation(id);
   const order = useCreateOrder();
+  const wide = bp !== 'mobile';
 
-  const pay = () => order.mutate(id!, {
-    onSuccess: (o) => {
-      // Web: kembali otomatis ke /app/pembayaran/{order_id} lewat callback Midtrans. Native: buka browser lalu tunggu di layar status.
-      if (Platform.OS === 'web') window.location.assign(o.redirect_url);
-      else { openUrl(o.redirect_url); router.push(`/app/pembayaran/${o.order_id}` as never); }
-    },
-    onError: (e) => toast.show({ message: errMsg(e), variant: 'error' }),
-  });
+  const pay = () => {
+    if (order.isPending) return; // satu klik = satu pesanan
+    order.mutate(id!, {
+      onSuccess: (o) => {
+        // Web: kembali otomatis ke /app/pembayaran/{order_id} lewat callback Midtrans. Native: buka browser lalu tunggu di layar status.
+        if (Platform.OS === 'web') window.location.assign(o.redirect_url);
+        else { openUrl(o.redirect_url); router.push(`/app/pembayaran/${o.order_id}` as never); }
+      },
+      onError: (e) => toast.show({ message: errMsg(e), variant: 'error' }),
+    });
+  };
 
-  if (inv.isLoading) return <Screen width="prose" style={{ paddingVertical: space[8] }}><Skeleton height={200} radius="lg" /></Screen>;
+  if (inv.isLoading) return <Screen style={{ paddingVertical: space[8] }}><Skeleton height={320} radius="lg" /></Screen>;
   if (inv.data?.plan === 'premium') {
     return <Screen width="prose"><EmptyState title="Undangan ini sudah Premium" actionLabel="Kembali ke undangan" onAction={() => router.replace(`/app/undangan/${id}` as never)} /></Screen>;
   }
-  return (
-    <Screen width="prose" style={{ paddingVertical: space[8], gap: space[6] }}>
-      <View style={{ gap: space[2] }}>
-        <Text variant="h1">Upgrade ke Premium</Text>
-        <Text color="textMuted">Sekali bayar untuk undangan {inv.data?.title ?? 'ini'}. Tidak ada langganan.</Text>
+  const title = inv.data?.title ?? 'undangan ini';
+  const price = formatRupiah(PREMIUM_PRICE);
+  const payButton = <Button label={`Bayar ${price}`} size="lg" fullWidth loading={order.isPending} disabled={order.isPending} onPress={pay} />;
+
+  const summary = (
+    <View style={{ gap: space[4], padding: space[6], borderRadius: radius.xl, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}>
+      <Text variant="overline" color="textMuted">Ringkasan</Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: space[3] }}>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: 'Inter_600SemiBold' }}>Premium</Text>
+          <Text variant="bodySm" color="textMuted" numberOfLines={1}>{title}</Text>
+        </View>
+        <Text style={{ fontFamily: 'Inter_600SemiBold' }}>{price}</Text>
       </View>
-      <PricingCard name="Premium" price={PREMIUM_PRICE} priceNote="sekali bayar per undangan" description="Untuk undangan yang ingin tampil utuh." features={PREMIUM_FEATURES} ctaLabel="Bayar sekarang" onPress={pay} highlighted />
-      <Card variant="sunken"><Text variant="bodySm" color="textMuted">Pembayaran lewat Midtrans (transfer virtual account, e-wallet, atau kartu). Premium aktif otomatis setelah pembayaran terkonfirmasi, biasanya dalam hitungan detik.</Text></Card>
-      <View style={{ flexDirection: 'row' }}><Button label="Bayar sekarang" size="lg" loading={order.isPending} onPress={pay} /></View>
-    </Screen>
+      <View style={{ height: 1, backgroundColor: colors.border }} />
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <Text color="textMuted">Total</Text>
+        <Text style={{ fontFamily: 'Fraunces_600SemiBold', fontSize: 32, lineHeight: 36 }}>{price}</Text>
+      </View>
+      {wide ? payButton : null}
+      <Text variant="caption" color="textMuted">Pembayaran lewat Midtrans: virtual account, e-wallet, atau kartu. Premium aktif otomatis setelah pembayaran terkonfirmasi, biasanya dalam hitungan detik.</Text>
+    </View>
+  );
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Screen style={{ paddingVertical: space[10] }}>
+        <View style={{ flexDirection: wide ? 'row' : 'column', gap: space[10], alignItems: 'flex-start' }}>
+          <View style={{ flex: 1, gap: space[6], width: '100%' }}>
+            <Text variant="overline" color="accent">Upgrade ke Premium</Text>
+            <Text style={{ fontFamily: 'Fraunces_600SemiBold', fontSize: wide ? 52 : 36, lineHeight: wide ? 56 : 40, letterSpacing: -1, color: colors.text }}>
+              Buat{' '}
+              <Text style={{ fontFamily: 'Fraunces_400Regular_Italic', fontSize: wide ? 52 : 36, lineHeight: wide ? 56 : 40, color: colors.accent }}>{title}</Text>
+              {' '}tampil utuh.
+            </Text>
+            <Text color="textMuted">Sekali bayar untuk undangan ini. Tanpa langganan, tanpa biaya tersembunyi.</Text>
+            <View style={{ borderTopWidth: 1, borderColor: colors.border }}>
+              {PREMIUM_FEATURES.filter((f) => f.included).map((f) => (
+                <View key={f.text} style={{ flexDirection: 'row', gap: space[3], alignItems: 'center', paddingVertical: space[4], borderBottomWidth: 1, borderColor: colors.border }}>
+                  <Icon name="check" color="accent" />
+                  <Text style={{ flex: 1 }}>{f.text}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+          {/* Web: kotak ringkasan menempel saat halaman digulir. */}
+          <View style={[{ width: wide ? 380 : '100%' }, wide && Platform.OS === 'web' ? ({ position: 'sticky', top: space[8] } as object) : null]}>
+            {summary}
+          </View>
+        </View>
+      </Screen>
+      {wide ? null : (
+        <View style={{ padding: space[4], borderTopWidth: 1, borderColor: colors.border, backgroundColor: colors.bg }}>{payButton}</View>
+      )}
+    </View>
   );
 }
 
