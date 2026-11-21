@@ -319,7 +319,8 @@ Kunci lama (Midtrans, Gemini, Supabase lama) wajib di-rotate pemilik (lihat 08, 
 | `MIDTRANS_SERVER_KEY` | ya | rahasia | Sandbox dulu |
 | `MIDTRANS_IS_PRODUCTION` | tidak | `false` | Memperbaiki B7. Production: TBD (akun belum ada) |
 | `PREMIUM_PRICE_IDR` | tidak | `99000` | Q17; memperbaiki B7. Harga final lain: TBD |
-| `WEB_BASE_URL` | ya | `https://<domain-web>` | Domain Vercel bawaan sementara (Q19). Dipakai untuk link undangan, callback Midtrans, CSP `frame-ancestors` |
+| `WEB_BASE_URL` | ya | `https://<domain-app>` | Domain app web (Expo). Dipakai untuk callback Midtrans dan CSP `frame-ancestors` (pratinjau di app) |
+| `PUBLIC_SITE_URL` | tidak | `https://<domain-situs>` | Domain situs publik `web/` yang me-rewrite `/u/:slug` (Q26); dipakai untuk link undangan dan link tamu. Kosong = `WEB_BASE_URL`. Lokal: `http://localhost:8010` (backend langsung) |
 | `PUBLIC_API_BASE_URL` | ya | `https://<host>.onrender.com` | Disuntik ke halaman undangan (script slot) dan CSP `connect-src` |
 | `CORS_ALLOWED_ORIGINS` | ya | `https://<domain-web>,http://localhost:8081` | Daftar, dipisah koma. `*` hanya untuk `/api/public/*` |
 | `FREE_GENERATION_LIMIT` | tidak | `3` | Q16 |

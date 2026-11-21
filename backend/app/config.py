@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     premium_price_idr: int = 99000
 
     web_base_url: str
+    # Domain situs publik yang me-rewrite /u/:slug ke backend (Q26). Kosong = pakai web_base_url.
+    public_site_url: str = ""
     public_api_base_url: str
     cors_allowed_origins: str
 
@@ -53,7 +55,7 @@ class Settings(BaseSettings):
         return f"{self.supabase_url.rstrip('/')}/storage/v1/object/public/{self.supabase_storage_bucket}/"
 
     def public_url(self, slug: str) -> str:
-        return f"{self.web_base_url.rstrip('/')}/u/{slug}"
+        return f"{(self.public_site_url or self.web_base_url).rstrip('/')}/u/{slug}"
 
 
 @lru_cache

@@ -72,3 +72,9 @@ def test_docs_off_in_production(monkeypatch):
     finally:
         monkeypatch.undo()
         get_settings.cache_clear()
+
+
+def test_public_url_prefers_public_site_url():
+    from app.config import Settings
+    assert Settings().public_url("a-b") == "https://web.test/u/a-b"
+    assert Settings(public_site_url="https://site.test/").public_url("a-b") == "https://site.test/u/a-b"
