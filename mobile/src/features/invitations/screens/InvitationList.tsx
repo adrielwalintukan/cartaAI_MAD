@@ -1,12 +1,19 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
+import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { InvitationCard } from '../../../components/domain';
 import { Button, EmptyState, Modal, Screen, Skeleton, SkeletonGroup, Text, useToast } from '../../../components/ui';
 import { formatDateId } from '../../../lib/format';
 import { useTheme } from '../../../theme';
 import type { InvitationSummary } from '../../../types/api';
+import { DashboardHero } from '../../dashboard/DashboardHero';
+import { PlanCompare } from '../../dashboard/PlanCompare';
+import { PremiumPromo } from '../../dashboard/PremiumPromo';
+import { StatStrip } from '../../dashboard/StatStrip';
+import { summarize } from '../../dashboard/summary';
 import { useMe } from '../../me/hooks';
+import { useStartUpgrade } from '../../payments/useStartUpgrade';
 import { useInvitationMutations, useInvitations } from '../hooks';
 import { daysLeft, errMsg, planLabel, STATUS } from '../ui';
 
@@ -42,11 +49,13 @@ function List({ limit }: { limit?: number }) {
                 plan={planLabel(i.plan)}
                 expiryLabel={left == null ? undefined : left > 0 ? `Aktif ${left} hari lagi` : 'Sudah kedaluwarsa'}
                 expirySoon={left != null && left <= 7}
+                expiryProgress={left == null ? undefined : Math.max(0, left) / (i.plan === 'premium' ? 365 : 30)}
+                rsvpLine={i.status === 'published' && i.guest_count > 0 ? `${i.rsvp_count} dari ${i.guest_count} tamu sudah RSVP` : undefined}
+                onUpgrade={i.plan === 'free' && !i.is_expired ? () => go(i.id, '/upgrade') : undefined}
                 onOpen={() => go(i.id)}
                 primary={i.status === 'published' ? { label: 'Bagikan', onPress: () => go(i.id) } : { label: 'Lanjutkan', onPress: () => go(i.id) }}
                 secondary={{ label: 'Tamu', onPress: () => go(i.id, '/tamu') }}
                 menu={[
-                  ...(i.plan === 'free' ? [{ label: 'Upgrade ke Premium', onPress: () => go(i.id, '/upgrade') }] : []),
                   { label: 'Ubah data', onPress: () => go(i.id, '/edit') },
                   { label: 'Hasil RSVP', onPress: () => go(i.id, '/rsvp') },
                   { label: 'Hapus', danger: true, onPress: () => setDel(i) },
@@ -81,21 +90,49 @@ function List({ limit }: { limit?: number }) {
   );
 }
 
-/** Beranda: sapaan, ajakan membuat, dan tiga undangan terbaru. */
+const ENTER = (i: number) => FadeInDown.delay(i * 60).duration(700).easing(Easing.out(Easing.exp));
+
+/** Beranda: sapaan, ringkasan angka, ajakan Premium, perbandingan paket, dan tiga undangan terbaru. */
 export function HomeScreen() {
   const router = useRouter();
   const { space } = useTheme();
   const me = useMe();
+  const q = useInvitations();
+  const upgrade = useStartUpgrade();
+  const [compare, setCompare] = useState(false);
   const name = me.data?.full_name?.split(' ')[0] ?? me.data?.email?.split('@')[0];
-  return (
-    <Screen style={{ paddingVertical: space[8], gap: space[6] }}>
-      <View style={{ gap: space[2] }}>
-        <Text variant="h1">{name ? `Halo, ${name}` : 'Beranda'}</Text>
-        <Text color="textMuted">Siapkan undangan, kirim ke tamu, lalu pantau siapa yang hadir.</Text>
+  const items = q.data?.items ?? [];
+  const s = summarize(items);
+  const status = !items.length
+    ? 'Mulai dari undangan pertamamu. Isi datanya, AI yang merancang.'
+    : `${s.active} undangan aktif · ${s.rsvps} tamu sudah konfirmasi`;
+  const openPlans = () => {
+    setCompare(true);
+    // Web: gulir ke perbandingan paket; native cukup membukanya.
+    if (Platform.OS === 'web') setTimeout(() => document.getElementById('bandingkan-paket')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  };
+  const blocks = [
+    <DashboardHero key="hero" name={name} status={status} onPlans={openPlans} />,
+    <StatStrip key="stats" stats={[
+      { label: 'Undangan aktif', value: q.isLoading ? null : s.active },
+      { label: 'Tamu', value: q.isLoading ? null : s.guests },
+      { label: 'Sudah RSVP', value: q.isLoading ? null : s.rsvps },
+      { label: 'Hari aktif tersisa', value: s.nearestDays },
+    ]} />,
+    upgrade.hasTargets || !upgrade.hasInvitations ? <PremiumPromo key="promo" onUpgrade={upgrade.start} /> : null,
+    <PlanCompare key="compare" open={compare} onToggle={() => setCompare((v) => !v)} />,
+    <View key="list" style={{ gap: space[4] }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <Text variant="h2">Undangan terbaru</Text>
+        {items.length > 3 ? <Button label="Lihat semua" variant="link" onPress={() => router.push('/app/undangan' as never)} /> : null}
       </View>
-      <View style={{ flexDirection: 'row' }}><Button label="Buat undangan" iconLeft="plus" size="lg" onPress={() => router.push('/app/undangan/baru')} /></View>
-      <Text variant="h3">Undangan terbaru</Text>
       <List limit={3} />
+    </View>,
+  ].filter(Boolean);
+  return (
+    <Screen style={{ paddingVertical: space[10], gap: space[10] }}>
+      {blocks.map((b, i) => <Animated.View key={i} entering={ENTER(i)}>{b}</Animated.View>)}
+      {upgrade.sheet}
     </Screen>
   );
 }
