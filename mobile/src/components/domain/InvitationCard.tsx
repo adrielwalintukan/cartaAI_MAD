@@ -33,7 +33,7 @@ export function InvitationCard({ title, subtitle, thumbnailUrl, status, plan, ex
   const { colors, radius, space, bp } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const thumb = bp === 'mobile' ? 84 : 108;
-  // Terangkat halus + garis tepi aksen saat kursor di atas (web) / disentuh.
+  // Terangkat halus + garis tepi aksen saat kursor di atas (web; di native tidak berpengaruh).
   const lift = useSharedValue(0);
   const [hovered, setHovered] = useState(false);
   const liftStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -lift.value * 3 }] }));
@@ -76,11 +76,13 @@ export function InvitationCard({ title, subtitle, thumbnailUrl, status, plan, ex
           ) : null}
         </View>
       </Pressable>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: space[2] }}>
-        <Button label={primary.label} size="sm" onPress={primary.onPress} />
-        {secondary ? <Button label={secondary.label} size="sm" variant="secondary" onPress={secondary.onPress} /> : null}
-        {onUpgrade ? <Button label="Upgrade" iconLeft="zap" size="sm" variant="ghost" onPress={onUpgrade} accessibilityLabel={`Upgrade ${title} ke Premium`} /> : null}
-        <View style={{ flex: 1 }} />
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: space[2] }}>
+        {/* Tombol aksi boleh turun baris di layar sempit; menu "…" tetap di kanan atas baris. */}
+        <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: space[2] }}>
+          <Button label={primary.label} size="sm" onPress={primary.onPress} />
+          {secondary ? <Button label={secondary.label} size="sm" variant="secondary" onPress={secondary.onPress} /> : null}
+          {onUpgrade ? <Button label="Upgrade" iconLeft="zap" size="sm" variant="ghost" onPress={onUpgrade} accessibilityLabel={`Upgrade ${title} ke Premium`} /> : null}
+        </View>
         {menu?.length ? (
           <Pressable accessibilityRole="button" accessibilityLabel={`Menu untuk ${title}`} onPress={() => setMenuOpen(true)} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="more-horizontal" color="textMuted" />

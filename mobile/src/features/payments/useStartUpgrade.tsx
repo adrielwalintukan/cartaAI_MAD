@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { View } from 'react-native';
 import { Button, Card, Modal, Text, useToast } from '../../components/ui';
 import { formatDateId } from '../../lib/format';
 import { useTheme } from '../../theme';
 import { upgradeTargets } from '../dashboard/summary';
 import { useInvitations } from '../invitations/hooks';
+import { errMsg } from '../invitations/ui';
 
 /** Upgrade dari mana saja: 0 undangan → buat dulu; 1 target → langsung checkout; >1 → pilih undangan. */
 export function useStartUpgrade() {
@@ -19,9 +20,15 @@ export function useStartUpgrade() {
   const targets = upgradeTargets(items);
   const go = (id: string) => router.push(`/app/undangan/${id}/upgrade` as never);
 
+  const busy = useRef(false);
   const start = async () => {
+    if (busy.current) return;
+    busy.current = true;
     // Diklik sebelum daftar termuat: tunggu datanya, jangan menyimpulkan "belum ada undangan".
-    const all = q.data?.items ?? (await q.refetch()).data?.items ?? [];
+    const r = q.data ?? (await q.refetch()).data;
+    busy.current = false;
+    if (!r) { toast.show({ message: errMsg(q.error), variant: 'error' }); return; }
+    const all = r.items;
     const targets = upgradeTargets(all);
     if (!all.length) {
       toast.show({ message: 'Buat undangan dulu, lalu upgrade dari sana.', variant: 'info' });
@@ -45,7 +52,7 @@ export function useStartUpgrade() {
     >
       <View style={{ gap: space[3] }} role="radiogroup">
         {targets.map((i) => (
-          <Card key={i.id} variant="interactive" selected={picked === i.id} onPress={() => setPicked(i.id)}
+          <Card key={i.id} variant="interactive" radio selected={picked === i.id} onPress={() => setPicked(i.id)}
             accessibilityLabel={`${i.title}${i.event_date ? `, ${formatDateId(i.event_date, true)}` : ''}`}
             style={{ flexDirection: 'row', gap: space[3], alignItems: 'center' }}>
             <View style={{ width: 40, height: 52, alignItems: 'center', justifyContent: 'center' }}>

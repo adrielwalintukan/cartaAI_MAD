@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React from 'react';
+import React, { useRef } from 'react';
 import { Platform, View } from 'react-native';
 import { Button, Card, EmptyState, Icon, Screen, Skeleton, Text, useToast } from '../../../components/ui';
 import { formatRupiah } from '../../../lib/format';
@@ -17,16 +17,19 @@ export function UpgradeScreen() {
   const inv = useInvitation(id);
   const order = useCreateOrder();
   const wide = bp !== 'mobile';
+  // Kunci sejak klik pertama sampai halaman Midtrans terbuka; hanya dilepas bila gagal (cegah pesanan ganda).
+  const latch = useRef(false);
 
   const pay = () => {
-    if (order.isPending) return; // satu klik = satu pesanan
+    if (latch.current) return;
+    latch.current = true;
     order.mutate(id!, {
       onSuccess: (o) => {
         // Web: kembali otomatis ke /app/pembayaran/{order_id} lewat callback Midtrans. Native: buka browser lalu tunggu di layar status.
         if (Platform.OS === 'web') window.location.assign(o.redirect_url);
         else { openUrl(o.redirect_url); router.push(`/app/pembayaran/${o.order_id}` as never); }
       },
-      onError: (e) => toast.show({ message: errMsg(e), variant: 'error' }),
+      onError: (e) => { latch.current = false; toast.show({ message: errMsg(e), variant: 'error' }); },
     });
   };
 
@@ -36,7 +39,7 @@ export function UpgradeScreen() {
   }
   const title = inv.data?.title ?? 'undangan ini';
   const price = formatRupiah(PREMIUM_PRICE);
-  const payButton = <Button label={`Bayar ${price}`} size="lg" fullWidth loading={order.isPending} disabled={order.isPending} onPress={pay} />;
+  const payButton = <Button label={`Bayar ${price}`} size="lg" fullWidth loading={order.isPending || order.isSuccess} disabled={order.isPending || order.isSuccess} onPress={pay} />;
 
   const summary = (
     <View style={{ gap: space[4], padding: space[6], borderRadius: radius.xl, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}>

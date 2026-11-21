@@ -31,6 +31,13 @@ Error halaman dan console: 0.
   - tombol chat disembunyikan di halaman ini.
 - **Pemilih undangan** (`picker-1440.png`) dan **perbandingan paket** (`compare-1440.png`).
 
+## Setelah review akhir
+- Baris tombol kartu di 390px sempat meluap (menu "…" terdorong keluar). Sekarang tombol aksi turun baris dan "…" tetap di kanan. Hasil pengukuran: tepi kanan menu 357 px < 390 px (`cards-390-dark.png`).
+- Gagal memuat daftar → toast galat, bukan salah arah ke form buat undangan.
+- Tombol Bayar terkunci sejak klik pertama sampai halaman Midtrans terbuka, dan hanya dilepas bila pesanan gagal.
+- Pemilih undangan diumumkan sebagai radio dengan status terpilih.
+- Promo menunggu data termuat (tidak berkedip untuk akun yang sudah Premium semua). Teks sapaan netral saat memuat.
+
 ## Catatan
 - Di tangkapan beranda 390px bagian bawah, daftar undangan masih berupa skeleton karena difoto saat data belum selesai dimuat. Di desktop, dengan data yang sama, kartu tampil.
 - Efek hover (kartu terangkat, mockup bergeser) dan hitung naik tidak terlihat di tangkapan statis. Kodenya diperiksa lewat `tsc`.

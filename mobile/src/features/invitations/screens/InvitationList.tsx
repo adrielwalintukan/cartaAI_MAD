@@ -104,7 +104,7 @@ export function HomeScreen() {
   const items = q.data?.items ?? [];
   const s = summarize(items);
   const drafts = items.filter((i) => i.status === 'draft').length;
-  const status = !items.length
+  const status = q.isLoading ? 'Menyiapkan ringkasan undanganmu…' : q.isError ? 'Ringkasan belum bisa dimuat.' : !items.length
     ? 'Mulai dari undangan pertamamu. Isi datanya, AI yang merancang.'
     : !s.active && drafts
       ? `${drafts} undangan masih draf. Lanjutkan agar AI merancangnya dan linknya aktif.`
@@ -122,7 +122,7 @@ export function HomeScreen() {
       { label: 'Sudah RSVP', value: q.isLoading ? null : s.rsvps },
       { label: 'Hari aktif tersisa', value: s.nearestDays },
     ]} />,
-    upgrade.hasTargets || !upgrade.hasInvitations ? <PremiumPromo key="promo" onUpgrade={upgrade.start} /> : null,
+    q.isSuccess && (upgrade.hasTargets || !upgrade.hasInvitations) ? <PremiumPromo key="promo" onUpgrade={upgrade.start} /> : null,
     <PlanCompare key="compare" open={compare} onToggle={() => setCompare((v) => !v)} />,
     <View key="list" style={{ gap: space[4] }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -131,10 +131,10 @@ export function HomeScreen() {
       </View>
       <List limit={3} />
     </View>,
-  ].filter(Boolean);
+  ].filter((b): b is React.ReactElement => !!b);
   return (
     <Screen style={{ paddingVertical: space[10], gap: space[10] }}>
-      {blocks.map((b, i) => <Animated.View key={i} entering={ENTER(i)}>{b}</Animated.View>)}
+      {blocks.map((b, i) => <Animated.View key={b.key} entering={ENTER(i)}>{b}</Animated.View>)}
       {upgrade.sheet}
     </Screen>
   );

@@ -11,9 +11,11 @@ type Props = ViewProps & {
   onPress?: () => void;
   selected?: boolean;
   style?: StyleProp<ViewStyle>;
+  /** Pilihan tunggal dalam `role="radiogroup"`: diumumkan sebagai radio dengan status checked. */
+  radio?: boolean;
 };
 
-export function Card({ variant = 'plain', onPress, selected, style, children, accessibilityLabel, ...rest }: Props) {
+export function Card({ variant = 'plain', onPress, selected, radio, style, children, accessibilityLabel, ...rest }: Props) {
   const { colors, radius, space, bp, border } = useTheme();
   const ring = useFocusRing();
   const base: ViewStyle = {
@@ -26,7 +28,8 @@ export function Card({ variant = 'plain', onPress, selected, style, children, ac
   if (variant === 'interactive' && onPress) {
     return (
       <Pressable
-        accessibilityRole="button"
+        accessibilityRole={radio ? 'radio' : 'button'}
+        accessibilityState={radio ? { checked: !!selected } : { selected: !!selected }}
         accessibilityLabel={accessibilityLabel}
         onPress={onPress}
         {...ring.handlers}
