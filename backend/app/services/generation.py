@@ -114,13 +114,13 @@ def run_job(db, s: Settings, job_id: str) -> None:
             stage("prompting")
             system, user_msg = prompt.build_messages(snap, snap.get("preset_brief") or "")
             stage("generating")
-            doc = _generate_valid(s, system, user_msg, (data.groom.name, data.bride.name), beat)
+            doc, model = _generate_valid(s, system, user_msg, (data.groom.name, data.bride.name), beat)
             stage("sanitizing")
             clean = sanitize(doc, SanitizeCtx(job["invitation_id"], s.storage_public_prefix))
             stage("injecting")
             final, warnings = ensure_slots(clean, SlotCtx(bool(snap.get("has_music")), bool(snap.get("has_gifts"))))
             stage("saving")
-            jobs_repo.commit(db, job_id, final, s.gemini_model, warnings, s.free_active_days)
+            jobs_repo.commit(db, job_id, final, model, warnings, s.free_active_days)
         except gemini.GeminiError as e:
             _fail(db, job_id, e.code)
         except (InvalidOutput, SanitizeError) as e:
@@ -131,12 +131,12 @@ def run_job(db, s: Settings, job_id: str) -> None:
             _fail(db, job_id, "internal_error")
 
 
-def _generate_valid(s: Settings, system: str, user_msg: str, names, beat) -> str:
+def _generate_valid(s: Settings, system: str, user_msg: str, names, beat) -> tuple[str, str]:
     last: Exception = InvalidOutput("kosong")
     for _ in range(MAX_ATTEMPTS):
         try:
-            raw = gemini.generate_text(s, system, user_msg, heartbeat=beat)
-            return extract_document(raw, names)
+            raw, model = gemini.generate_design(s, system, user_msg, heartbeat=beat)
+            return extract_document(raw, names), model
         except InvalidOutput as e:
             last = e
         except gemini.GeminiError as e:

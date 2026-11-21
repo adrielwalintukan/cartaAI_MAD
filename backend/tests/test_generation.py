@@ -16,9 +16,9 @@ def ai(monkeypatch):
 
     def fake(s, system, contents, **kw):
         calls.append((system, contents))
-        return "```html\n" + GOOD + "\n```"
+        return "```html\n" + GOOD + "\n```", "gemini-2.5-flash"
 
-    monkeypatch.setattr(gemini, "generate_text", fake)
+    monkeypatch.setattr(gemini, "generate_design", fake)
     monkeypatch.setattr(gemini.time, "sleep", lambda *_: None)
     return calls
 
@@ -78,7 +78,7 @@ def test_job_in_progress(client, make_inv, ai, db):
 
 def test_invalid_output_3x_fails_without_quota(client, make_inv, monkeypatch, db):
     n = []
-    monkeypatch.setattr(gemini, "generate_text", lambda *a, **k: n.append(1) or "bukan html")
+    monkeypatch.setattr(gemini, "generate_design", lambda *a, **k: (n.append(1) or "bukan html", "m"))
     inv = make_inv()
     jid = gen(client, inv).json()["job_id"]
     job = client.get(f"/api/jobs/{jid}", headers=auth(A)).json()
@@ -91,14 +91,14 @@ def test_rate_limited_fails_fast(client, make_inv, monkeypatch):
     def boom(*a, **k):
         raise gemini.GeminiError("ai_rate_limited")
 
-    monkeypatch.setattr(gemini, "generate_text", boom)
+    monkeypatch.setattr(gemini, "generate_design", boom)
     jid = gen(client, make_inv()).json()["job_id"]
     job = client.get(f"/api/jobs/{jid}", headers=auth(A)).json()
     assert job["error"]["code"] == "ai_rate_limited"
 
 
 def test_unexpected_error_hidden(client, make_inv, monkeypatch):
-    monkeypatch.setattr(gemini, "generate_text", lambda *a, **k: 1 / 0)
+    monkeypatch.setattr(gemini, "generate_design", lambda *a, **k: 1 / 0)
     jid = gen(client, make_inv()).json()["job_id"]
     job = client.get(f"/api/jobs/{jid}", headers=auth(A)).json()
     assert job["error"]["code"] == "internal_error" and "division" not in job["error"]["message"]
@@ -165,3 +165,9 @@ def test_free_snapshot_keeps_design_input_drops_gifts(db, make_inv, settings):
     snap = generation.build_snapshot(settings, inv, {"id": "default", "brief": "b"}, [])
     assert snap["data"]["color_theme"] == "sage" and snap["data"]["design_notes"] == "bunga"
     assert "gifts" not in snap["data"]
+
+
+def test_run_job_records_actual_model(client, make_inv, monkeypatch, db):
+    monkeypatch.setattr(gemini, "generate_design", lambda *a, **k: (GOOD, "gemini-3.1-flash-lite"))
+    gen(client, make_inv())
+    assert db.tables["invitation_versions"][-1]["model"] == "gemini-3.1-flash-lite"
