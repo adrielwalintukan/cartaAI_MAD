@@ -47,8 +47,8 @@ def build_snapshot(s: Settings, inv: dict, preset: dict, assets: list[dict]) -> 
             by_kind["gallery"].append(url)
         elif a["kind"] != "music":
             by_kind[a["kind"]] = url
-    return {"data": data, "preset_id": preset["id"] if premium else "default",
-            "preset_brief": preset["brief"] if premium else None, "plan": inv["plan"], "assets": by_kind,
+    # Q27: gaya pilihan dipakai semua paket; hanya aset dan rekening yang dibatasi Premium.
+    return {"data": data, "preset_id": preset["id"], "preset_brief": preset.get("brief"), "plan": inv["plan"], "assets": by_kind,
             "has_music": premium and any(a["kind"] == "music" for a in assets),
             "has_gifts": premium and bool(data.get("gifts"))}
 

@@ -95,10 +95,16 @@ def test_ensure_slots_keeps_multiple_ornaments():
     assert count(out, "ornament") == 2 and not any("ornament" in x for x in w)
 
 
-def test_render_public_fills_known_ornament_and_empties_unknown():
+def test_render_public_fills_known_ornament_skips_unknown():
     out = render_public(doc('<div data-carta="ornament" data-kind="rings"></div>'
                             '<div data-carta="ornament" data-kind="naga"><p>isi</p></div>'), PCTX, SCTX, "N")
-    assert out.count("<svg") == 1 and "<p>isi</p>" not in out
+    assert out.count("<svg") == 1 and "<p>isi</p>" in out
+
+
+def test_ornament_keeps_ai_content_inside_slot():
+    out = render_public(doc('<div data-carta="ornament" data-kind="arch-frame"><h1>Rendy &amp; Febe</h1></div>'), PCTX, SCTX, "N")
+    assert "<svg" in out and "Rendy &amp; Febe" in out
+    assert out.index("<svg") < out.index("Rendy")
 
 
 def test_all_kinds_present_and_safe():
@@ -114,6 +120,7 @@ def test_kit_size_budget():
 
 
 def test_kit_css_classes_and_reduced_motion():
+    assert ".carta-grain::before" in _STYLE and ".carta-grain{background-image" not in _STYLE
     for token in (".carta-reveal", ".carta-in", ".carta-delay-3", ".carta-reveal-zoom", ".carta-frame",
                   ".carta-grain", ".carta-display", "prefers-reduced-motion"):
         assert token in _STYLE

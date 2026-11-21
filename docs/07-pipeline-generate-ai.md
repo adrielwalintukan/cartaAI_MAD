@@ -55,7 +55,7 @@ Kelengkapan: jika `groom.name`, `bride.name`, `event_date`, atau `ceremony.locat
 
 ### 3.1 Panggilan
 
-- SDK **`google-genai`**. Generate undangan memakai `GEMINI_DESIGN_MODEL` (`gemini-2.5-flash`) lalu `GEMINI_MODEL` (`gemini-3.1-flash-lite`) sebagai cadangan; urutan: model desain key 1 → key 2 → cadangan key 1 → key 2; model 404 langsung dilewati; nama model yang dipakai disimpan di `invitation_versions.model` (Q27). Chatbot memakai `GEMINI_MODEL`. Q22:
+- SDK **`google-genai`**. Generate undangan memakai `GEMINI_DESIGN_MODEL` (`gemini-3.5-flash`) lalu `GEMINI_MODEL` (`gemini-3.1-flash-lite`) sebagai cadangan; urutan: model desain key 1 → key 2 → cadangan key 1 → key 2; model desain yang galat selain 429 (mis. 404, 400, timeout) langsung dilewati ke cadangan; nama model yang dipakai disimpan di `invitation_versions.model` (Q27). Chatbot memakai `GEMINI_MODEL`. Q22:
   `client = genai.Client(api_key=...)` →
   `client.models.generate_content(model=..., contents=<pesan user>, config=types.GenerateContentConfig(system_instruction=<prompt sistem>, temperature=0.8, max_output_tokens=32768, http_options=...timeout 90 dtk))`.
   Nilai `temperature`, `max_output_tokens`, dan anggaran *thinking* adalah titik awal — **TBD disetel setelah uji coba nyata** di F1-8.

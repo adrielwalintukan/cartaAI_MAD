@@ -314,7 +314,7 @@ Kunci lama (Midtrans, Gemini, Supabase lama) wajib di-rotate pemilik (lihat 08, 
 | `GEMINI_API_KEY` | ya | rahasia | Key utama (menggantikan `GOOGLE_API_KEY*`) |
 | `GEMINI_API_KEY_FALLBACK` | tidak | rahasia | Dipakai saat 429/503 pada key utama (Q22) |
 | `GEMINI_MODEL` | tidak | `gemini-3.1-flash-lite` | Q22; chatbot dan cadangan generate |
-| `GEMINI_DESIGN_MODEL` | tidak | `gemini-2.5-flash` | Q27; model utama generate undangan |
+| `GEMINI_DESIGN_MODEL` | tidak | `gemini-3.5-flash` | Q27; model utama generate undangan |
 | `GEMINI_TIMEOUT_SECONDS` | tidak | `90` | Per panggilan |
 | `GEMINI_MAX_OUTPUT_TOKENS` | tidak | `32768` | TBD setelah uji |
 | `MIDTRANS_SERVER_KEY` | ya | rahasia | Sandbox dulu |

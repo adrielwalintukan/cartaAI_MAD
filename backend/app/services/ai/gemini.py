@@ -57,9 +57,9 @@ def _run(s: Settings, models: list[str], system: str, contents, temperature: flo
                     kind = classify(exc)
                     log.warning("gemini gagal model=%s key_index=%d kind=%s type=%s", model, i, kind,
                                 type(exc).__name__)
-                    if kind == "ai_unavailable":
+                    if kind == "ai_unavailable" and model == models[-1]:
                         raise GeminiError("ai_unavailable", "Layanan AI tidak dapat dihubungi.") from None
-                    if kind == "ai_model_missing":
+                    if kind in ("ai_unavailable", "ai_model_missing"):
                         missing.add(model)  # model tak tersedia: langsung ke model berikutnya
                     else:
                         last = kind

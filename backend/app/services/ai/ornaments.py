@@ -88,9 +88,8 @@ KINDS: dict[str, str] = {
 
 
 def fill(soup: BeautifulSoup) -> None:
-    """Isi setiap slot ornamen; `data-kind` tak dikenal → slot dikosongkan (bukan dihapus, agar tata letak AI tetap)."""
+    """Sisipkan SVG di awal setiap slot ornamen yang `data-kind`-nya dikenal; isi buatan AI di dalam slot dibiarkan."""
     for slot in soup.find_all(attrs={"data-carta": "ornament"}):
-        slot.clear()
         svg = KINDS.get(slot.get("data-kind", ""))
-        if svg:
-            slot.append(BeautifulSoup(svg, "html.parser"))
+        if svg and not slot.find("svg", attrs={"data-carta-svg": True}):
+            slot.insert(0, BeautifulSoup(svg.replace("<svg ", '<svg data-carta-svg="" ', 1), "html.parser"))

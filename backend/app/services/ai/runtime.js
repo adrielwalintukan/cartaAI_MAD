@@ -124,9 +124,18 @@
   }
 
   // open: sampul mengunci scroll sampai dibuka; tanpa tombol open tidak ada kunci
+  // Kunci hanya bila aman: tombol terlihat utuh di layar pertama, sampul bukan seluruh halaman (tidak memuat
+  // slot RSVP/hitung mundur), dan tamu tidak datang lewat #anchor. Ukuran layar berubah → kunci dilepas.
   var opens = all("open");
   var cover = opens.length && opens[0].closest("section,header");
-  if (cover && cover !== document.body) root.classList.add("carta-locked");
+  if (cover && (cover === document.body || cover.querySelector('[data-carta="rsvp"],[data-carta="countdown"]'))) cover = null;
+  if (cover && !location.hash) {
+    var r = opens[0].getBoundingClientRect(), cs = getComputedStyle(opens[0]);
+    if (r.width && r.height && r.top >= 0 && r.bottom <= innerHeight && cs.visibility !== "hidden" && cs.opacity !== "0") {
+      root.classList.add("carta-locked");
+      addEventListener("resize", function () { root.classList.remove("carta-locked"); }, { once: true });
+    }
+  }
   opens.forEach(function (a) {
     a.addEventListener("click", function (e) {
       startMusic();

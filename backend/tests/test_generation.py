@@ -16,7 +16,7 @@ def ai(monkeypatch):
 
     def fake(s, system, contents, **kw):
         calls.append((system, contents))
-        return "```html\n" + GOOD + "\n```", "gemini-2.5-flash"
+        return "```html\n" + GOOD + "\n```", "gemini-3.5-flash"
 
     monkeypatch.setattr(gemini, "generate_design", fake)
     monkeypatch.setattr(gemini.time, "sleep", lambda *_: None)
@@ -171,3 +171,9 @@ def test_run_job_records_actual_model(client, make_inv, monkeypatch, db):
     monkeypatch.setattr(gemini, "generate_design", lambda *a, **k: (GOOD, "gemini-3.1-flash-lite"))
     gen(client, make_inv())
     assert db.tables["invitation_versions"][-1]["model"] == "gemini-3.1-flash-lite"
+
+
+def test_free_snapshot_uses_chosen_preset(settings):
+    inv = {"plan": "free", "data": {"color_theme": "sage"}}
+    snap = generation.build_snapshot(settings, inv, {"id": "nusantara", "brief": "Batik."}, [])
+    assert snap["preset_id"] == "nusantara" and snap["preset_brief"] == "Batik."

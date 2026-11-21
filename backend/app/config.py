@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     gemini_api_key: str
     gemini_api_key_fallback: str = ""
     gemini_model: str = "gemini-3.1-flash-lite"  # chat + cadangan generate
-    gemini_design_model: str = "gemini-2.5-flash"  # generate undangan (Q27)
+    gemini_design_model: str = "gemini-3.5-flash"  # generate undangan (Q27)
     gemini_timeout_seconds: int = 90
     gemini_max_output_tokens: int = 32768
 
