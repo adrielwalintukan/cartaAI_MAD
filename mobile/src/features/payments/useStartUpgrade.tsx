@@ -19,8 +19,11 @@ export function useStartUpgrade() {
   const targets = upgradeTargets(items);
   const go = (id: string) => router.push(`/app/undangan/${id}/upgrade` as never);
 
-  const start = () => {
-    if (!items.length) {
+  const start = async () => {
+    // Diklik sebelum daftar termuat: tunggu datanya, jangan menyimpulkan "belum ada undangan".
+    const all = q.data?.items ?? (await q.refetch()).data?.items ?? [];
+    const targets = upgradeTargets(all);
+    if (!all.length) {
       toast.show({ message: 'Buat undangan dulu, lalu upgrade dari sana.', variant: 'info' });
       router.push('/app/undangan/baru');
     } else if (!targets.length) toast.show({ message: 'Semua undanganmu sudah Premium.', variant: 'info' });

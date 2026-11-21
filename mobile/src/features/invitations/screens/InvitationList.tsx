@@ -103,9 +103,12 @@ export function HomeScreen() {
   const name = me.data?.full_name?.split(' ')[0] ?? me.data?.email?.split('@')[0];
   const items = q.data?.items ?? [];
   const s = summarize(items);
+  const drafts = items.filter((i) => i.status === 'draft').length;
   const status = !items.length
     ? 'Mulai dari undangan pertamamu. Isi datanya, AI yang merancang.'
-    : `${s.active} undangan aktif · ${s.rsvps} tamu sudah konfirmasi`;
+    : !s.active && drafts
+      ? `${drafts} undangan masih draf. Lanjutkan agar AI merancangnya dan linknya aktif.`
+      : `${s.active} undangan aktif · ${s.rsvps} tamu sudah konfirmasi`;
   const openPlans = () => {
     setCompare(true);
     // Web: gulir ke perbandingan paket; native cukup membukanya.
