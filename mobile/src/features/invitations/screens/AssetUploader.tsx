@@ -11,7 +11,10 @@ import { generatorApi, uploadAsset } from '../../generator/api';
 import { invitationKeys } from '../hooks';
 import { errMsg } from '../ui';
 
-type Picked = { uri: string; mime?: string };
+type Picked = { uri: string; mime?: string; w?: number; h?: number };
+
+// Foto di bawah ini buram di layar ponsel (layar 3x): sisi terpanjang minimal 1280 px.
+const MIN_LONG_SIDE = 1280;
 
 async function pick(kind: AssetKind, multi: boolean): Promise<Picked[]> {
   if (kind === 'music') {
@@ -19,7 +22,7 @@ async function pick(kind: AssetKind, multi: boolean): Promise<Picked[]> {
     return r.canceled ? [] : r.assets.map((a) => ({ uri: a.uri, mime: a.mimeType }));
   }
   const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsMultipleSelection: multi, quality: 0.85 });
-  return r.canceled ? [] : r.assets.map((a) => ({ uri: a.uri, mime: a.mimeType }));
+  return r.canceled ? [] : r.assets.map((a) => ({ uri: a.uri, mime: a.mimeType, w: a.width, h: a.height }));
 }
 
 /** Unggah langsung ke Storage lewat URL bertanda tangan; server memvalidasi tipe dan ukuran (06 §5). */
@@ -40,6 +43,8 @@ export function AssetUploader({ inv, kind, label, multi = false, max = 1 }: { in
         await uploadAsset(inv.id, { kind, contentType: blob.type || p.mime || 'application/octet-stream', sizeBytes: blob.size, position: items.length + i, body: blob });
       }
       if (picked.length) await refresh();
+      const small = picked.filter((p) => p.w && p.h && Math.max(p.w, p.h) < MIN_LONG_SIDE);
+      if (small.length) toast.show({ message: `${small.length === 1 ? 'Foto ini' : `${small.length} foto ini`} kecil (${small[0].w}×${small[0].h} px) dan bisa tampak buram di ponsel. Pakai foto asli dengan sisi terpanjang minimal ${MIN_LONG_SIDE} px.`, variant: 'info' });
     } catch (e) {
       toast.show({ message: errMsg(e), variant: 'error' });
     } finally { setBusy(false); }

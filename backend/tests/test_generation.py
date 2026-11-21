@@ -199,4 +199,4 @@ def test_photoless_output_accepted_on_last_attempt(monkeypatch, settings):
 
 def test_photo_urls_from_snapshot():
     snap = {"assets": {"cover": "c", "groom": None, "bride": "b", "gallery": ["g1", "g2"]}}
-    assert generation._photo_urls(snap) == ["c", "b", "g1", "g2"]
+    assert generation._photo_urls(snap) == ["c"]  # potret dan galeri dirender sistem

@@ -19,6 +19,7 @@ _SECTION_STYLE = "padding:2.5rem 1rem"
 class SlotCtx:
     has_music: bool
     has_gifts: bool
+    has_gallery: bool = False
 
 
 def ensure_slots(html: str, ctx: SlotCtx) -> tuple[str, list[str]]:
@@ -29,13 +30,13 @@ def ensure_slots(html: str, ctx: SlotCtx) -> tuple[str, list[str]]:
         found.setdefault(el["data-carta"], []).append(el)
 
     for name, els in found.items():
-        if name not in ("guest-name", "open", "ornament") and len(els) > 1:
+        if name not in ("guest-name", "open", "ornament", "portrait") and len(els) > 1:
             for dup in els[1:]:
                 del dup["data-carta"]
             warnings.append(f"slot_{name}_duplicate_removed")
             found[name] = els[:1]
 
-    for name, has in (("music", ctx.has_music), ("gift", ctx.has_gifts)):
+    for name, has in (("music", ctx.has_music), ("gift", ctx.has_gifts), ("gallery", ctx.has_gallery)):
         if not has and found.get(name):
             for el in found.pop(name):
                 el.decompose()
@@ -52,6 +53,10 @@ def ensure_slots(html: str, ctx: SlotCtx) -> tuple[str, list[str]]:
             body.append(el)
             found[name] = [el]
             warnings.append(f"slot_{name}_missing_injected")
+    if ctx.has_gallery and not found.get("gallery"):
+        el = make("section", "gallery", _SECTION_STYLE)
+        found["rsvp"][0].insert_before(el)
+        warnings.append("slot_gallery_missing_injected")
     if ctx.has_gifts and not found.get("gift"):
         el = make("section", "gift", _SECTION_STYLE)
         found["rsvp"][0].insert_before(el)
@@ -81,6 +86,8 @@ class PublicCtx:
     api_base: str
     music_url: str | None = None
     gifts: list[dict] = field(default_factory=list)
+    gallery: list[str] = field(default_factory=list)
+    portraits: dict = field(default_factory=dict)  # {"groom": url, "bride": url}
 
 
 def event_iso(event_date: str | None, time_hhmm: str | None, tz: str) -> str | None:
@@ -120,8 +127,56 @@ _STYLE = (
     "[data-carta=ornament] svg{display:block;width:100%;height:auto}"
     "html.carta-locked,html.carta-locked body{overflow:hidden}"
     ".carta-cover-out{transform:translateY(-100%)!important;transition:transform .9s cubic-bezier(.76,0,.24,1)}"
+    # Komponen sistem: kartu, peta, rekening, musik, galeri, potret (selalu rapi apa pun desain AI)
+    ".carta-card{background:color-mix(in srgb,var(--carta-bg,#fff) 55%,#fff);"
+    "border:1px solid color-mix(in srgb,var(--carta-accent,#8a5a44) 20%,transparent);border-radius:1.25rem;"
+    "padding:1.5rem;box-shadow:0 1px 2px rgba(0,0,0,.05),0 18px 40px -18px rgba(0,0,0,.28);"
+    "transition:transform .6s cubic-bezier(.23,1,.32,1),box-shadow .6s cubic-bezier(.23,1,.32,1)}"
+    ".carta-card:hover{transform:translateY(-4px);box-shadow:0 2px 4px rgba(0,0,0,.06),0 26px 50px -18px rgba(0,0,0,.34)}"
+    ".carta-map{margin:1rem 0;border-radius:1rem;overflow:hidden;border:1px solid color-mix(in srgb,var(--carta-accent,#8a5a44) 25%,transparent);"
+    "box-shadow:0 10px 30px -14px rgba(0,0,0,.3);line-height:0}"
+    ".carta-map iframe{width:100%;height:190px;border:0;display:block}"
+    ".carta-gifts{display:grid;gap:1.25rem;justify-items:center;max-width:24rem;margin:0 auto}"
+    ".carta-bank{width:100%;aspect-ratio:1.586;box-sizing:border-box;padding:1.25rem 1.4rem;border-radius:1.25rem;"
+    "display:flex;flex-direction:column;justify-content:space-between;text-align:left;color:#fff;position:relative;overflow:hidden;"
+    "background:linear-gradient(135deg,color-mix(in srgb,var(--carta-accent,#8a5a44) 88%,#000),color-mix(in srgb,var(--carta-accent,#8a5a44) 45%,#000));"
+    "box-shadow:0 22px 44px -20px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.25)}"
+    ".carta-bank::after{content:\"\";position:absolute;inset:0;pointer-events:none;"
+    "background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.22) 50%,transparent 65%);transform:translateX(-120%);"
+    "animation:carta-shine 5s ease-in-out infinite}"
+    "@keyframes carta-shine{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}"
+    ".carta-bank-top{font-size:1rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase}"
+    ".carta-bank-no{font-size:clamp(1.15rem,5.4vw,1.5rem);letter-spacing:.12em;font-weight:600;font-variant-numeric:tabular-nums}"
+    ".carta-bank-foot{display:flex;justify-content:space-between;align-items:flex-end;gap:.75rem}"
+    ".carta-bank-foot small{display:block;font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;opacity:.75}"
+    ".carta-bank-foot b{font-size:.95rem;letter-spacing:.04em;text-transform:uppercase}"
+    ".carta-bank-foot button{padding:.45rem .95rem;border:1px solid rgba(255,255,255,.55);border-radius:999px;"
+    "background:rgba(255,255,255,.18);color:#fff;font-weight:600;font-size:.8rem;line-height:1;font-family:inherit;cursor:pointer;backdrop-filter:blur(6px)}"
+    ".carta-bank-foot button:hover{background:rgba(255,255,255,.3)}"
+    ".carta-music-wrap{position:fixed;right:1rem;bottom:1rem;z-index:60;padding:0;margin:0;background:none;border:0}"
+    ".carta-music{width:3.1rem;height:3.1rem;border-radius:50%;border:1px solid rgba(255,255,255,.55);padding:0;display:grid;place-items:center;"
+    "cursor:pointer;color:#fff;background:color-mix(in srgb,var(--carta-accent,#8a5a44) 92%,#000);"
+    "box-shadow:0 10px 26px -8px rgba(0,0,0,.5);transition:transform .4s cubic-bezier(.23,1,.32,1)}"
+    ".carta-music:hover{transform:scale(1.08)}.carta-music svg{display:block}"
+    ".carta-music-on{animation:carta-pulse 2.4s ease-out infinite}"
+    "@keyframes carta-pulse{0%{box-shadow:0 10px 26px -8px rgba(0,0,0,.5),0 0 0 0 color-mix(in srgb,var(--carta-accent,#8a5a44) 55%,transparent)}"
+    "70%,100%{box-shadow:0 10px 26px -8px rgba(0,0,0,.5),0 0 0 16px transparent}}"
+    ".carta-gallery{columns:2;column-gap:.75rem;max-width:34rem;margin:0 auto;padding:0 1rem}"
+    "@media (min-width:768px){.carta-gallery{columns:3}}"
+    ".carta-gallery figure{margin:0 0 .75rem;break-inside:avoid;border-radius:1rem;overflow:hidden;line-height:0;"
+    "box-shadow:0 12px 28px -16px rgba(0,0,0,.4)}"
+    ".carta-gallery img{width:100%;height:auto;display:block;transition:transform 1.1s cubic-bezier(.23,1,.32,1)}"
+    ".carta-gallery figure:hover img{transform:scale(1.05)}"
+    ".carta-portrait{width:min(15rem,70%);margin:0 auto 1.25rem;border-radius:999px 999px 1.25rem 1.25rem;overflow:hidden;line-height:0;"
+    "border:4px solid #fff;box-shadow:0 0 0 1px color-mix(in srgb,var(--carta-accent,#8a5a44) 40%,transparent),0 22px 44px -20px rgba(0,0,0,.45)}"
+    ".carta-portrait img{width:100%;height:auto;display:block}"
+    ".carta-kenburns{animation:carta-kb 20s ease-in-out infinite alternate}"
+    "@keyframes carta-kb{from{transform:scale(1)}to{transform:scale(1.09)}}"
+    ".carta-float{animation:carta-fl 6s ease-in-out infinite}"
+    "@keyframes carta-fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}"
+    ".carta-map,.carta-gallery,.carta-bank{max-width:100%}"
     "@media (prefers-reduced-motion:reduce){.carta-js .carta-reveal{opacity:1;transform:none;transition:none}"
-    ".carta-cover-out{transition:none}}"
+    ".carta-cover-out{transition:none}.carta-kenburns,.carta-float,.carta-bank::after,.carta-music-on{animation:none}}"
 )
 
 
@@ -131,7 +186,7 @@ def render_public(html: str, ctx: PublicCtx, sctx: SanitizeCtx, nonce: str) -> s
     ornaments.fill(soup)  # SVG sistem diisi setelah sanitasi
     clean = serialize(soup)
     config = {"slug": ctx.slug, "api": ctx.api_base.rstrip("/"), "eventAt": ctx.event_at, "plan": ctx.plan,
-              "musicUrl": ctx.music_url, "gifts": ctx.gifts}
+              "musicUrl": ctx.music_url, "gifts": ctx.gifts, "gallery": ctx.gallery, "portraits": ctx.portraits}
     parts = [
         f'<style data-carta-style nonce="{nonce}">{_STYLE}</style>',
         f'<script nonce="{nonce}">window.__CARTA__={json_for_script(config)};</script>',
@@ -164,7 +219,7 @@ def build_csp(nonce: str | None, supabase_url: str, api_base: str, web_base: str
         f"img-src data: {sb}",
         f"media-src {sb}",
         f"connect-src {api_base.rstrip('/')}",
-        "frame-src 'none'", "object-src 'none'", "base-uri 'none'", "form-action 'none'",
+        "frame-src https://www.google.com", "object-src 'none'", "base-uri 'none'", "form-action 'none'",
         f"frame-ancestors 'self' {web_base.rstrip('/')}",
         "sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox",
     ])

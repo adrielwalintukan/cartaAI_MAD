@@ -119,7 +119,8 @@ def run_job(db, s: Settings, job_id: str) -> None:
             stage("sanitizing")
             clean = sanitize(doc, SanitizeCtx(job["invitation_id"], s.storage_public_prefix))
             stage("injecting")
-            final, warnings = ensure_slots(clean, SlotCtx(bool(snap.get("has_music")), bool(snap.get("has_gifts"))))
+            final, warnings = ensure_slots(clean, SlotCtx(bool(snap.get("has_music")), bool(snap.get("has_gifts")),
+                                                    bool((snap.get("assets") or {}).get("gallery"))))
             stage("saving")
             jobs_repo.commit(db, job_id, final, model, warnings, s.free_active_days)
         except gemini.GeminiError as e:
@@ -133,8 +134,8 @@ def run_job(db, s: Settings, job_id: str) -> None:
 
 
 def _photo_urls(snap: dict) -> list[str]:
-    a = snap.get("assets") or {}
-    return [u for u in (a.get("cover"), a.get("groom"), a.get("bride"), *(a.get("gallery") or [])) if u]
+    # Hanya sampul yang ditulis AI; potret dan galeri dirender sistem (slot portrait dan gallery).
+    return [u for u in [(snap.get("assets") or {}).get("cover")] if u]
 
 
 def _generate_valid(s: Settings, system: str, user_msg: str, names, beat, photos=()) -> tuple[str, str]:

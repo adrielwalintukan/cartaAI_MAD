@@ -43,14 +43,19 @@ def serve_invitation(slug: str, db=Depends(get_db), s: Settings = Depends(get_se
     if not ver:
         return _error_page(s, 404, "Undangan tidak ditemukan", "Periksa kembali tautan undangan Anda.")
     data = inv["data"]
-    music = next((a for a in assets_repo.list_for(db, inv["id"], "ready") if a["kind"] == "music"), None)
+    ready = assets_repo.list_for(db, inv["id"], "ready")
+    music = next((a for a in ready if a["kind"] == "music"), None)
     premium = inv["plan"] == "premium"
+    photo = lambda a: asset_url(s, a["storage_path"])  # noqa: E731
+    gallery = [photo(a) for a in ready if a["kind"] == "gallery"] if premium else []
+    portraits = {a["kind"]: photo(a) for a in ready if a["kind"] in ("groom", "bride")} if premium else {}
     gifts = (data.get("gifts") or []) if premium else []
     ctx = slots.PublicCtx(
         slug=slug, plan=inv["plan"], api_base=s.public_api_base_url,
         event_at=slots.event_iso(data.get("event_date"), (data.get("ceremony") or {}).get("time"),
                                  data.get("timezone", "WIB")),
-        music_url=asset_url(s, music["storage_path"]) if (music and premium) else None, gifts=gifts)
+        music_url=asset_url(s, music["storage_path"]) if (music and premium) else None, gifts=gifts,
+        gallery=gallery, portraits=portraits)
     nonce = slots.new_nonce()
     page = slots.render_public(ver["html"], ctx, SanitizeCtx(inv["id"], s.storage_public_prefix), nonce)
     cache = "public, s-maxage=300, stale-while-revalidate=86400"

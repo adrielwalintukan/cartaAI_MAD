@@ -80,34 +80,85 @@
     load();
   });
 
-  // music
-  var audio = null;
-  function startMusic() { if (audio) audio.play().catch(function () {}); }
+  // music: bubble kanan bawah di <body> (di luar sampul yang bergeser); klik = mute, klik lagi = unmute
+  var audio = null, syncMusic = function () {};
+  function startMusic() { if (audio) { audio.muted = false; audio.play().catch(function () {}); syncMusic(); } }
+  var ICON_ON = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+  var ICON_OFF = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></svg>';
   all("music").forEach(function (slot) {
     clear(slot);
-    if (!C.musicUrl) return;
-    audio = el("audio", null, { src: C.musicUrl, loop: "" });
-    var btn = el("button", "♪", { type: "button", "aria-label": "Putar atau jeda musik" });
-    btn.className = "carta-box";
-    btn.style.cssText = "width:2.75rem;height:2.75rem;border-radius:50%;padding:0;cursor:pointer";
-    btn.addEventListener("click", function () { audio.paused ? audio.play().catch(function () {}) : audio.pause(); });
-    slot.appendChild(audio); slot.appendChild(btn);
+    if (!C.musicUrl || audio) { slot.remove(); return; }
+    audio = el("audio", null, { src: C.musicUrl, loop: "", preload: "none" });
+    var btn = el("button", null, { type: "button", "aria-label": "Matikan suara musik" });
+    btn.className = "carta-music";
+    slot.removeAttribute("style"); slot.className = "carta-music-wrap";
+    document.body.appendChild(slot);
+    syncMusic = function () {
+      var on = !audio.paused && !audio.muted;
+      btn.innerHTML = on ? ICON_ON : ICON_OFF;
+      btn.setAttribute("aria-label", on ? "Matikan suara musik" : "Nyalakan suara musik");
+      btn.classList.toggle("carta-music-on", on);
+    };
+    btn.addEventListener("click", function () {
+      if (audio.paused) { audio.muted = false; audio.play().catch(function () {}); } else audio.muted = !audio.muted;
+      syncMusic();
+    });
+    audio.addEventListener("play", syncMusic); audio.addEventListener("pause", syncMusic);
+    slot.appendChild(audio); slot.appendChild(btn); syncMusic();
   });
 
-  // gift
+  // gift: kartu bank (gradien aksen, chip, nomor, nama, Salin)
+  var CHIP = '<svg viewBox="0 0 44 34" width="44" height="34" aria-hidden="true"><rect width="44" height="34" rx="6" fill="#e6c97a"/><path d="M0 12h44M0 22h44M15 0v34M29 0v34" stroke="#b89a45" stroke-width="1.2" fill="none"/></svg>';
+  function fmtAcc(n) { return String(n).replace(/\s+/g, "").replace(/(.{4})/g, "$1 ").trim(); }
   all("gift").forEach(function (slot) {
-    var b = box(slot);
-    (C.gifts || []).forEach(function (g) {
-      var card = el("div"); card.className = "carta-wish";
-      card.appendChild(el("strong", g.bank)); card.appendChild(el("p", g.account_number));
-      card.appendChild(el("p", "a.n. " + g.account_name));
+    clear(slot);
+    var b = el("div"); b.className = "carta-gifts"; slot.appendChild(b);
+    (C.gifts || []).forEach(function (g, i) {
+      var card = el("div"); card.className = "carta-bank carta-reveal carta-delay-" + Math.min(i + 1, 3);
+      var top = el("div"); top.className = "carta-bank-top";
+      top.appendChild(el("span", g.bank)); card.appendChild(top);
+      var chip = el("div"); chip.className = "carta-bank-chip"; chip.innerHTML = CHIP; card.appendChild(chip);
+      card.appendChild(el("div", fmtAcc(g.account_number))).className = "carta-bank-no";
+      var foot = el("div"); foot.className = "carta-bank-foot";
+      var who = el("div"); who.appendChild(el("small", "Atas nama")); who.appendChild(el("b", g.account_name)); foot.appendChild(who);
       var cp = el("button", "Salin", { type: "button" });
       cp.addEventListener("click", function () {
-        var done = function () { cp.textContent = "Tersalin"; };
+        var done = function () { cp.textContent = "Tersalin"; setTimeout(function () { cp.textContent = "Salin"; }, 1800); };
         if (navigator.clipboard) navigator.clipboard.writeText(g.account_number).then(done, function () {});
       });
-      card.appendChild(cp); b.appendChild(card);
+      foot.appendChild(cp); card.appendChild(foot); b.appendChild(card);
     });
+  });
+
+  // galeri: kolom dengan rasio asli foto, tidak ada yang dipotong
+  all("gallery").forEach(function (slot) {
+    clear(slot);
+    var list = C.gallery || [];
+    if (!list.length) { slot.remove(); return; }
+    var g = el("div"); g.className = "carta-gallery"; slot.appendChild(g);
+    list.forEach(function (u, i) {
+      var f = el("figure"); f.className = "carta-reveal carta-delay-" + (i % 3 + 1);
+      f.appendChild(el("img", null, { src: u, alt: "Galeri " + (i + 1), loading: "lazy", decoding: "async" }));
+      g.appendChild(f);
+    });
+  });
+
+  // potret mempelai: bingkai lengkung, rasio asli
+  all("portrait").forEach(function (slot) {
+    var u = (C.portraits || {})[slot.getAttribute("data-who")];
+    clear(slot);
+    if (!u) { slot.remove(); return; }
+    slot.classList.add("carta-portrait", "carta-reveal");
+    slot.appendChild(el("img", null, { src: u, alt: slot.getAttribute("data-who") === "bride" ? "Foto mempelai wanita" : "Foto mempelai pria", decoding: "async" }));
+  });
+
+  // peta: embed Google Maps sebelum tiap tombol "Buka di Google Maps"
+  Array.prototype.slice.call(document.querySelectorAll('a[href^="https://www.google.com/maps/search/"]')).forEach(function (a) {
+    var qs; try { qs = new URL(a.href).searchParams.get("query"); } catch (e) { return; }
+    if (!qs) return;
+    var w = el("div"); w.className = "carta-map carta-reveal";
+    w.appendChild(el("iframe", null, { src: "https://www.google.com/maps?q=" + encodeURIComponent(qs) + "&output=embed", title: "Peta " + qs, loading: "lazy", referrerpolicy: "no-referrer" }));
+    a.parentNode.insertBefore(w, a);
   });
 
   // reveal saat scroll (kit desain); tanpa IntersectionObserver langsung tampil

@@ -1,7 +1,7 @@
 import json
 import re
 
-from app.services.ai.sanitize import SanitizeCtx
+from app.services.ai.sanitize import SanitizeCtx, sanitize
 from app.services.ai.slots import PublicCtx, SlotCtx, build_csp, ensure_slots, json_for_script, render_public
 
 PREFIX = "https://test.supabase.co/storage/v1/object/public/invitation-assets/"
@@ -98,7 +98,7 @@ def test_ensure_slots_keeps_multiple_ornaments():
 def test_render_public_fills_known_ornament_skips_unknown():
     out = render_public(doc('<div data-carta="ornament" data-kind="rings"></div>'
                             '<div data-carta="ornament" data-kind="naga"><p>isi</p></div>'), PCTX, SCTX, "N")
-    assert out.count("<svg") == 1 and "<p>isi</p>" in out
+    assert out.split("<style")[0].count("<svg") == 1 and "<p>isi</p>" in out
 
 
 def test_ornament_keeps_ai_content_inside_slot():
@@ -126,3 +126,26 @@ def test_kit_css_classes_and_reduced_motion():
         assert token in _STYLE
     # tanpa JS (kelas carta-js belum ada) konten tidak disembunyikan
     assert ".carta-js .carta-reveal{" in _STYLE and "\n.carta-reveal{opacity:0" not in _STYLE
+
+
+def test_gallery_slot_injected_or_removed():
+    out, w = ensure_slots(doc(), SlotCtx(False, False, True))
+    assert 'data-carta="gallery"' in out and "slot_gallery_missing_injected" in w
+    out, w = ensure_slots(doc('<div data-carta="gallery"></div>'), SlotCtx(False, False, False))
+    assert 'data-carta="gallery"' not in out and "slot_gallery_removed_no_data" in w
+
+
+def test_portrait_slot_and_who_survive_sanitize():
+    out = sanitize(doc('<div data-carta="portrait" data-who="groom"></div><div data-carta="portrait" data-who="x"></div>'), SCTX)
+    assert 'data-who="groom"' in out and 'data-who="x"' not in out
+
+
+def test_csp_allows_google_maps_frame_only():
+    csp = build_csp("N", "https://x.supabase.co", "https://api.x", "https://app.x")
+    assert "frame-src https://www.google.com;" in csp
+
+
+def test_two_portrait_slots_are_kept():
+    out, w = ensure_slots(doc('<div data-carta="portrait" data-who="groom"></div><div data-carta="portrait" data-who="bride"></div>'),
+                          SlotCtx(False, False))
+    assert count(out, "portrait") == 2 and "slot_portrait_duplicate_removed" not in w
