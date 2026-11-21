@@ -6,7 +6,7 @@ export type InvitationData = {
   groom: Party; bride: Party; religion?: Religion; event_date: string; timezone?: 'WIB' | 'WITA' | 'WIT';
   ceremony: { label?: string; time?: string; location: string };
   reception?: { time?: string; location: string };
-  notes?: string; color_theme?: string;
+  notes?: string; color_theme?: string; design_notes?: string;
   gifts?: { bank: string; account_number: string; account_name: string }[];
 };
 export type InvitationStatus = 'draft' | 'generating' | 'published' | 'expired';

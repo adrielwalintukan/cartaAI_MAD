@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
-import { Badge, Button, Card, DatePicker, EmptyState, ProgressSteps, Screen, Select, Skeleton, Text, TextField, useToast } from '../../../components/ui';
+import { Image, View } from 'react-native';
+import { Button, Card, DatePicker, EmptyState, ProgressSteps, Screen, Select, Skeleton, TextArea, Text, TextField, useToast } from '../../../components/ui';
 import { useTheme } from '../../../theme';
 import type { InvitationData, Invitation, Party } from '../../../types/api';
 import { useStartGenerate } from '../../generator/hooks';
@@ -16,6 +16,7 @@ const STEPS = [{ key: 'gaya', label: 'Gaya' }, { key: 'mempelai', label: 'Mempel
 const RELIGIONS = ['islam', 'kristen', 'katolik', 'hindu', 'buddha', 'konghucu', 'lainnya'].map((v) => ({ value: v, label: v[0].toUpperCase() + v.slice(1) }));
 const ZONES = ['WIB', 'WITA', 'WIT'].map((v) => ({ value: v, label: v }));
 const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+const PALETTES = ['Sage & champagne', 'Navy & emas', 'Terracotta & krem', 'Hitam & emas', 'Dusty pink & putih'];
 
 function PartyFields({ title, value, onChange }: { title: string; value?: Party; onChange: (p: Party) => void }) {
   const { space } = useTheme();
@@ -126,17 +127,26 @@ export function InvitationFormScreen({ mode }: { mode: 'create' | 'edit' }) {
           {slugState === 'ok' ? <Text variant="bodySm" color="success">Alamat tersedia.</Text> : null}
           <View style={{ gap: space[3] }}>
             <Text variant="label">Gaya desain</Text>
-            <Text variant="bodySm" color="textMuted">Arahan untuk AI: palet, suasana, dan huruf. Gaya lain tersedia di paket Premium.</Text>
-            {(presets.data?.items ?? []).map((p) => {
-              const locked = p.premium_only && !premium;
-              return (
-                <Card key={p.id} variant="interactive" selected={presetId === p.id} accessibilityLabel={`${p.name}. ${p.description}${locked ? '. Khusus Premium' : ''}`} onPress={() => (locked ? toast.show({ message: 'Gaya ini khusus Premium.', variant: 'info' }) : setPresetId(p.id))} style={{ gap: space[1], opacity: locked ? 0.6 : 1 }}>
-                  <View style={{ flexDirection: 'row', gap: space[2], alignItems: 'center' }}><Text variant="h3">{p.name}</Text>{p.premium_only ? <Badge label="Premium" tone="accent" /> : null}</View>
+            <Text variant="bodySm" color="textMuted">Arahan untuk AI: palet, suasana, ornamen, dan huruf. Semua gaya bisa dipakai di semua paket.</Text>
+            {(presets.data?.items ?? []).map((p) => (
+              <Card key={p.id} variant="interactive" selected={presetId === p.id} accessibilityLabel={`${p.name}. ${p.description}`} onPress={() => setPresetId(p.id)} style={{ flexDirection: 'row', gap: space[3], alignItems: 'center' }}>
+                {p.preview_url ? <Image source={{ uri: p.preview_url }} resizeMode="contain" accessibilityIgnoresInvertColors style={{ width: 56, height: 96 }} /> : null}
+                <View style={{ flex: 1, gap: space[1] }}>
+                  <Text variant="h3">{p.name}</Text>
                   <Text color="textMuted">{p.description}</Text>
-                </Card>
-              );
-            })}
+                </View>
+              </Card>
+            ))}
           </View>
+          <View style={{ gap: space[3] }}>
+            <TextField label="Tema warna" optional maxLength={80} hint="Tulis sendiri atau pilih salah satu saran." value={data.color_theme ?? ''} onChangeText={(color_theme) => set({ color_theme })} />
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space[2] }}>
+              {PALETTES.map((c) => (
+                <Button key={c} label={c} size="sm" variant={data.color_theme === c ? 'primary' : 'secondary'} accessibilityState={{ selected: data.color_theme === c }} onPress={() => set({ color_theme: c })} />
+              ))}
+            </View>
+          </View>
+          <TextArea label="Ceritakan desain impianmu" optional maxLength={300} placeholder="Mis. nuansa batik Minahasa, banyak ornamen bunga, terasa hangat" hint="AI memakai ini untuk warna, ornamen, dan suasana. Paket Gratis tanpa foto; desain digambar dengan ornamen dan warna." value={data.design_notes ?? ''} onChangeText={(design_notes) => set({ design_notes })} />
         </View>
       ) : null}
 
@@ -171,7 +181,6 @@ export function InvitationFormScreen({ mode }: { mode: 'create' | 'edit' }) {
       {step === 3 ? (
         premium && inv ? (
           <View style={{ gap: space[6] }}>
-            <TextField label="Tema warna" optional hint="Mis. sage green dan krem, atau biru dongker." value={data.color_theme ?? ''} onChangeText={(color_theme) => set({ color_theme })} />
             <AssetUploader inv={inv} kind="cover" label="Foto sampul" />
             <AssetUploader inv={inv} kind="groom" label="Foto mempelai pria" />
             <AssetUploader inv={inv} kind="bride" label="Foto mempelai wanita" />
@@ -193,7 +202,7 @@ export function InvitationFormScreen({ mode }: { mode: 'create' | 'edit' }) {
         ) : (
           <Card variant="sunken" style={{ gap: space[3] }}>
             <Text variant="h3">Khusus Premium</Text>
-            <Text color="textMuted">Foto, galeri, musik, tema warna, dan amplop digital tersedia setelah undangan ini di-upgrade. Undangan gratismu tetap lengkap: nama, acara, lokasi, RSVP, dan hitung mundur.</Text>
+            <Text color="textMuted">Foto, galeri, musik, dan amplop digital tersedia setelah undangan ini di-upgrade. Undangan gratismu tetap lengkap: nama, acara, lokasi, RSVP, dan hitung mundur.</Text>
           </Card>
         )
       ) : null}
