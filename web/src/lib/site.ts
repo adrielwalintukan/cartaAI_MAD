@@ -36,10 +36,10 @@ export const TEMPLATES: Template[] = [
 
 /** Alur 4 langkah (Tentang lama + docs/02). */
 export const STEPS = [
-  { n: "01", title: "Pilih gaya", body: "Elegan, formal, simple, atau biarkan AI menentukan dari tema warna yang kamu tulis.", color: "#e9dfc6" },
-  { n: "02", title: "Isi detail", body: "Nama pasangan, orang tua, tanggal, lokasi, dan pesan spesial. Cukup beberapa menit.", color: "#e6d6cf" },
-  { n: "03", title: "AI merancang", body: "Undangan disusun khusus dari data dan gayamu, bukan template yang sama untuk semua orang. Biasanya selesai dalam satu menit.", color: "#dfe3dc" },
-  { n: "04", title: "Bagikan & pantau", body: "Setiap tamu mendapat link pribadi lewat WhatsApp. Lihat siapa yang hadir dan baca ucapan mereka.", color: "#efe9e1" },
+  { n: "01", title: "Pilih gaya", body: "Elegan, formal, simple, atau biarkan AI menentukan dari tema warna yang kamu tulis.", color: "#e9dfc6", image: "/templates/elegan_2.webp", points: ["9 gaya siap pakai", "Atau tulis tema warnamu sendiri", "Bisa diganti sebelum dibuat ulang"] },
+  { n: "02", title: "Isi detail", body: "Nama pasangan, orang tua, tanggal, lokasi, dan pesan spesial. Cukup beberapa menit.", color: "#e6d6cf", image: "/templates/formal_2.webp", points: ["Pasangan, orang tua, dan acara", "Lokasi lengkap dengan peta", "Foto, galeri, dan musik (Premium)"] },
+  { n: "03", title: "AI merancang", body: "Undangan disusun khusus dari data dan gayamu, bukan template yang sama untuk semua orang. Biasanya selesai dalam satu menit.", color: "#dfe3dc", image: "/templates/elegan_1.webp", points: ["Biasanya sekitar satu menit", "Buat ulang 3× (Gratis) atau 15× (Premium)", "Bisa kembali ke versi sebelumnya"] },
+  { n: "04", title: "Bagikan & pantau", body: "Setiap tamu mendapat link pribadi lewat WhatsApp. Lihat siapa yang hadir dan baca ucapan mereka.", color: "#efe9e1", image: "/templates/simple_1.webp", points: ["Link pribadi untuk setiap tamu", "Kirim lewat WhatsApp", "Rekap kehadiran dan ucapan"] },
 ];
 
 /** Fitur (komponen Features lama) + keunggulan (Tentang lama), tanpa emoji. */

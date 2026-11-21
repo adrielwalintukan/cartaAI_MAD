@@ -23,7 +23,7 @@
       "versionCode": 3
     },
     "web": {
-      "output": "static",
+      "output": "single",
       "favicon": "./assets/images/logo_cartaAI.png"
     },
     "plugins": [

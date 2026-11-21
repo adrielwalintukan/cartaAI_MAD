@@ -6,7 +6,7 @@ import { appLink, NAV } from "@/lib/site";
 import { gsap, prefersReducedMotion } from "@/lib/gsap";
 import { getLenis } from "@/components/motion/SmoothScroll";
 
-/** Satu baris teks kecil (ala Locomotive). mix-blend-difference membuatnya terbaca di atas section terang maupun gelap. */
+/** Satu baris teks kecil (ala Locomotive). Di puncak halaman memakai mix-blend-difference; setelah scroll berlatar solid agar tidak bertabrakan dengan judul. */
 export function Nav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -15,9 +15,10 @@ export function Nav() {
   useEffect(() => setOpen(false), [pathname]);
   // Sembunyi saat scroll ke bawah, muncul saat scroll ke atas (agar tidak menimpa judul besar).
   const [hidden, setHidden] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     let last = window.scrollY;
-    const onScroll = () => { const y = window.scrollY; setHidden(y > 120 && y > last); last = y; };
+    const onScroll = () => { const y = window.scrollY; setHidden(y > 120 && y > last); setScrolled(y > 40); last = y; };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -30,7 +31,7 @@ export function Nav() {
 
   return (
     <>
-      <header className={`wrap fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between text-paper mix-blend-difference transition-transform duration-700 ease-[cubic-bezier(.19,1,.22,1)] ${hidden && !open ? "-translate-y-full" : ""}`} onFocusCapture={() => setHidden(false)}>
+      <header className={`wrap fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between transition-[transform,background-color] duration-700 ease-[cubic-bezier(.19,1,.22,1)] ${scrolled && !open ? "bg-paper/85 text-ink shadow-[0_1px_0_var(--color-line)] backdrop-blur-md" : "text-paper mix-blend-difference"} ${hidden && !open ? "-translate-y-full" : ""}`} onFocusCapture={() => setHidden(false)}>
         <Link href="/" className="text-[15px] font-semibold tracking-tight" aria-label="CartaAI, beranda">
           Carta<span className="serif-accent text-[17px]">AI</span><sup className="ml-0.5 text-[9px]">®</sup>
         </Link>
