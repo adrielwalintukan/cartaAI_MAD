@@ -458,7 +458,7 @@ Dua pemakaian, satu komponen dengan dua varian:
 
 - Dua kartu: **Gratis** dan **Premium** (Q17). Anatomi: nama paket (`overline`), harga (Fraunces 600 40: `Rp0`, `Rp99.000`) + keterangan "sekali bayar per undangan", satu kalimat penjelas, daftar fitur (centang `accent` / batasan `textMuted`), tombol.
 - Premium diberi border `accent` 1,5px dan badge "Paling dipilih"; **tidak** ada gradien, bayangan, atau kartu yang diperbesar. Tombol Gratis `secondary`, Premium `primary`.
-- Daftar fitur mengikuti Q17: Gratis: data inti, watermark, aktif 30 hari, maks 50 tamu. Premium: foto, galeri (maks 10), musik, amplop digital, pilihan tema & gaya, tanpa watermark, aktif 1 tahun, tamu tak terbatas.
+- Daftar fitur mengikuti Q17: Gratis: data inti, watermark, aktif 30 hari, maks 50 tamu. Premium: foto, galeri (maks 10), musik, amplop digital, tanpa watermark, aktif 1 tahun, tamu tak terbatas. Gaya dan tema warna untuk semua paket (Q27).
 - Layout: berdampingan di desktop (lebar sama, maks 400), bertumpuk di mobile dengan Premium di atas. A11y: tiap kartu `role="group"` berlabel nama paket; centang disertai teks ("Termasuk"/"Tidak termasuk" untuk pembaca layar).
 
 ### 5.14 GuestRow

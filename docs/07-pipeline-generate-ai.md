@@ -55,7 +55,7 @@ Kelengkapan: jika `groom.name`, `bride.name`, `event_date`, atau `ceremony.locat
 
 ### 3.1 Panggilan
 
-- SDK **`google-genai`**, model `gemini-3.1-flash-lite` (`GEMINI_MODEL`), Q22:
+- SDK **`google-genai`**. Generate undangan memakai `GEMINI_DESIGN_MODEL` (`gemini-2.5-flash`) lalu `GEMINI_MODEL` (`gemini-3.1-flash-lite`) sebagai cadangan; urutan: model desain key 1 → key 2 → cadangan key 1 → key 2; model 404 langsung dilewati; nama model yang dipakai disimpan di `invitation_versions.model` (Q27). Chatbot memakai `GEMINI_MODEL`. Q22:
   `client = genai.Client(api_key=...)` →
   `client.models.generate_content(model=..., contents=<pesan user>, config=types.GenerateContentConfig(system_instruction=<prompt sistem>, temperature=0.8, max_output_tokens=32768, http_options=...timeout 90 dtk))`.
   Nilai `temperature`, `max_output_tokens`, dan anggaran *thinking* adalah titik awal — **TBD disetel setelah uji coba nyata** di F1-8.
@@ -167,6 +167,7 @@ sistem yang **mengisi** isinya saat penyajian dengan komponen/script yang selalu
 | `music` | `<div data-carta="music"></div>` | Opsional | Tombol putar/jeda mengambang + `<audio>` dari aset musik; mulai saat slot `open` diklik | aset `music` ada (premium) |
 | `gift` | `<div data-carta="gift"></div>` | Opsional | Kartu rekening (bank, nomor, nama, tombol "Salin") dari `invitations.data.gifts` **saat penyajian** | `gifts` tidak kosong (premium) |
 | `open` | `<a href="#acara" data-carta="open">` | Opsional | Menambahkan perilaku klik: mulai musik (bila ada) + gulir ke `href`. *(penambahan di dokumen ini: tombol "Buka Undangan" butuh JS, sedangkan AI dilarang menulis JS)* | — |
+| `ornament` | `<div data-carta="ornament" data-kind="…"></div>` | Opsional, boleh banyak | Diisi SVG sistem (`ornaments.py`) setelah sanitasi saat penyajian; jenis: floral-corner, floral-divider, leaf-divider, arch-frame, batik-band, rings, dots-divider, wave; jenis tak dikenal dikosongkan (Q27) | selalu |
 | `watermark` | *(tidak ditaruh AI)* | Sistem | Footer "Dibuat dengan CartaAI" untuk plan `free` | `plan = free` |
 
 Komponen sistem dibangun dengan netral: mewarisi `font-family`/warna dan membaca variabel `--carta-*` (prompt §3.2 poin 5)
@@ -208,6 +209,12 @@ Tidak ada kasus yang membuat job gagal hanya karena slot — pengguna selalu men
 Perilaku `runtime.js` (ringkas): membaca `?to=` (`URLSearchParams`, ganti `+`→spasi) → `guest-name` dan nama RSVP (readonly
 bila ada `to`); `rsvp`: `fetch` `POST/GET` ke `api` dengan URL absolut; `countdown`: `setInterval` 1 dtk; `music`: tombol
 kontrol, tidak autoplay sebelum gestur; `gift`: tombol salin via `navigator.clipboard` (cadangan: pilih teks); `open`: klik.
+
+**Kit desain (Q27).** CSS di `<style data-carta-style>` menyediakan `carta-reveal` (+ `-left|-right|-zoom`, `carta-delay-1..3`),
+`carta-frame`, `carta-grain`, `carta-display`. `runtime.js` memasang `carta-js` di `<html>` lalu menandai `carta-in` lewat
+IntersectionObserver; tanpa JS atau dengan `prefers-reduced-motion` semua konten langsung tampil. Bila ada tombol `open` di dalam
+section sampul, scroll dikunci sampai tombol ditekan, lalu sampul digeser ke atas. Prompt sistem memuat daftar wajib desain dan
+penjelasan kit; `color_theme` dan `design_notes` dikirim di `<data>` dan diikuti hanya untuk tampilan. Ukuran kit < 25 KB.
 **Tidak memakai `localStorage`/cookie** (dokumen di-sandbox, tanpa `allow-same-origin`).
 
 ## 6. Header saat menyajikan (CSP dan lainnya)

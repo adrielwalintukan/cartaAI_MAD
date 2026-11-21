@@ -36,7 +36,7 @@ export const TEMPLATES: Template[] = [
 
 /** Alur 4 langkah (Tentang lama + docs/02). */
 export const STEPS = [
-  { n: "01", title: "Pilih gaya", body: "Elegan, formal, simple, atau biarkan AI menentukan dari tema warna yang kamu tulis.", color: "#e9dfc6", image: "/templates/elegan_2.webp", points: ["9 gaya siap pakai", "Atau tulis tema warnamu sendiri", "Bisa diganti sebelum dibuat ulang"] },
+  { n: "01", title: "Pilih gaya", body: "Pilih gaya, tema warna, lalu ceritakan desain impianmu. AI mengikutinya untuk warna, ornamen, dan suasana.", color: "#e9dfc6", image: "/templates/elegan_2.webp", points: ["Semua gaya di semua paket", "Tulis tema warna dan keinginan desainmu", "Bisa diganti sebelum dibuat ulang"] },
   { n: "02", title: "Isi detail", body: "Nama pasangan, orang tua, tanggal, lokasi, dan pesan spesial. Cukup beberapa menit.", color: "#e6d6cf", image: "/templates/formal_2.webp", points: ["Pasangan, orang tua, dan acara", "Lokasi lengkap dengan peta", "Foto, galeri, dan musik (Premium)"] },
   { n: "03", title: "AI merancang", body: "Undangan disusun khusus dari data dan gayamu, bukan template yang sama untuk semua orang. Biasanya selesai dalam satu menit.", color: "#dfe3dc", image: "/templates/elegan_1.webp", points: ["Biasanya sekitar satu menit", "Buat ulang 3× (Gratis) atau 15× (Premium)", "Bisa kembali ke versi sebelumnya"] },
   { n: "04", title: "Bagikan & pantau", body: "Setiap tamu mendapat link pribadi lewat WhatsApp. Lihat siapa yang hadir dan baca ucapan mereka.", color: "#efe9e1", image: "/templates/simple_1.webp", points: ["Link pribadi untuk setiap tamu", "Kirim lewat WhatsApp", "Rekap kehadiran dan ucapan"] },
@@ -55,16 +55,16 @@ export const FEATURES = [
 export const PLANS = [
   {
     name: "Gratis", price: "Rp0", note: "selamanya", cta: "Mulai gratis",
-    items: ["Nama, orang tua, acara, dan lokasi", "RSVP, ucapan, dan hitung mundur", "Link aktif 30 hari, maksimal 50 tamu", "Buat ulang 3 kali", "Watermark CartaAI"],
+    items: ["Nama, orang tua, acara, dan lokasi", "RSVP, ucapan, dan hitung mundur", "Semua gaya, tema warna, dan keinginan desain", "Link aktif 30 hari, maksimal 50 tamu", "Buat ulang 3 kali", "Watermark CartaAI"],
   },
   {
     name: "Premium", price: PREMIUM_PRICE, note: "sekali bayar per undangan", cta: "Buat lalu upgrade", highlight: true,
-    items: ["Semua fitur paket Gratis", "Foto sampul, mempelai, dan galeri 10 foto", "Musik latar dan amplop digital", "Semua gaya dan tema warna", "Tanpa watermark, aktif 1 tahun", "Tamu tak terbatas, buat ulang 15 kali"],
+    items: ["Semua fitur paket Gratis", "Foto sampul, mempelai, dan galeri 10 foto", "Musik latar dan amplop digital", "Tanpa watermark, aktif 1 tahun", "Tamu tak terbatas, buat ulang 15 kali"],
   },
 ];
 
 export const FAQ = [
-  { q: "Apakah saya perlu bisa mendesain?", a: "Tidak. Kamu cukup mengisi data pernikahan dan memilih gaya. AI menyusun tata letak, warna, huruf, dan ornamennya." },
+  { q: "Apakah saya perlu bisa mendesain?", a: "Tidak. Kamu cukup mengisi data pernikahan, memilih gaya, dan kalau mau menulis keinginan desain seperti \"nuansa batik, banyak bunga\". AI menyusun tata letak, warna, huruf, ornamen, dan animasinya." },
   { q: "Berapa lama undangan selesai dibuat?", a: "Biasanya kurang dari satu menit. Kamu bisa menutup halaman, hasilnya tetap tersimpan dan link langsung aktif." },
   { q: "Bagaimana cara mengirim ke tamu?", a: "Tambahkan daftar tamu (bisa ditempel dari spreadsheet), lalu kirim lewat WhatsApp. Setiap tamu mendapat link dengan namanya sendiri." },
   { q: "Apa bedanya Gratis dan Premium?", a: "Gratis sudah lengkap untuk undangan sederhana: data acara, RSVP, hitung mundur, aktif 30 hari. Premium menambah foto, galeri, musik, amplop digital, tanpa watermark, dan aktif 1 tahun." },

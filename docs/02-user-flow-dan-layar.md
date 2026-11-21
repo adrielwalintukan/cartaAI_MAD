@@ -187,13 +187,14 @@ Pembatasan Premium harus ditegakkan **di server** juga (B1), tidak hanya dikunci
 | `agama` | Agama | Opsional | Gratis | Pilihan: islam, kristen, hindu, buddha, lainnya; mempengaruhi salam/teks pembuka. Katolik dan konghucu belum ada di opsi sekarang: TBD ditambah |
 | `catatanKhusus` | Catatan khusus | Opsional | Gratis | Teks bebas ke AI (di-escape, Q14). Batas panjang TBD |
 
-### Gaya dan tampilan (Premium)
+### Gaya dan tampilan (semua paket, Q27)
 
 | Field (acuan) | Label | Wajib? | Paket | Catatan |
 |---------------|-------|--------|-------|---------|
-| (baru) `presetId` | Preset gaya / "Bebas" | Opsional | **Premium** | Q18; menggantikan layar Template sekarang. Gratis memakai gaya bawaan |
-| `temaWarna` | Tema warna | Opsional | **Premium** | Sekarang: soft-pink, sage-green, navy-gold, terracotta, monochrome. Pada mode "Bebas" boleh teks bebas dari pengguna (Q18) |
+| (baru) `presetId` | Preset gaya / "Bebas" | Opsional | Gratis | Q18, Q27; menggantikan layar Template sekarang |
+| `temaWarna` | Tema warna | Opsional | Gratis (Q27) | Sekarang: soft-pink, sage-green, navy-gold, terracotta, monochrome. Pada mode "Bebas" boleh teks bebas dari pengguna (Q18) |
 | `jenisUndangan` | Jenis/gaya undangan | Opsional | **Premium** | Sekarang: klasik, modern, rustic, minimalis, luxury, vintage. Kemungkinan melebur dengan preset (TBD) |
+| (baru) `design_notes` | Ceritakan desain impianmu | Opsional | Gratis | Q27; ≤ 300, diikuti AI hanya untuk tampilan |
 | `customFont` | Font kustom | - | - | Ada di backend, **tidak ada di UI** sekarang. v2: dihapus; font ditentukan preset/AI (TBD konfirmasi) |
 
 ### Media dan fitur tambahan (Premium)
@@ -261,7 +262,7 @@ Notasi state: **Kosong / Memuat / Galat / Sukses**. Mobile vs desktop dijelaskan
 
 ### 4.7 Generator `/app/undangan/baru`
 - **Tujuan**: mengumpulkan data dan memulai job generate.
-- **Isi**: langkah 1 pilih preset/"Bebas" (Premium) lalu form bertahap dengan bagian: Mempelai, Orang tua, Acara, Gaya, Media, Amplop digital, Catatan; kolom Premium terkunci pada Gratis; panel ringkasan paket dan kuota; tombol "Buat undangan".
+- **Isi**: langkah 1 pilih preset/"Bebas", tema warna, dan keinginan desain (semua paket, Q27) lalu form bertahap dengan bagian: Mempelai, Orang tua, Acara, Gaya, Media, Amplop digital, Catatan; kolom Premium terkunci pada Gratis; panel ringkasan paket dan kuota; tombol "Buat undangan".
 - **State**: Kosong (form awal); Memuat (unggah berkas berprogres, tombol disabled saat submit); Galat (validasi per field, slug dipakai, unggahan gagal, jaringan, fitur Premium ditolak); Sukses (→ layar progres).
 - **Mobile**: stepper satu bagian per layar (menggantikan layar tunggal 1.522 baris), bilah progres langkah, tombol Lanjut tetap di bawah. **Desktop**: form dua kolom + pratinjau gaya/ringkasan di kanan, semua bagian terlihat sebagai halaman bergulir.
 

@@ -41,7 +41,7 @@ header `X-Request-ID` dan baris log server. Stack trace tidak pernah dikirim ke 
 |------|--------|------|
 | 400 | `bad_request` | Request tidak valid secara umum (mis. body bukan JSON) |
 | 401 | `unauthorized` | Token tidak ada/kedaluwarsa/tidak valid |
-| 403 | `premium_required` | Fitur khusus premium (foto, galeri, musik, rekening, preset premium) |
+| 403 | `premium_required` | Fitur khusus premium (foto, galeri, musik, rekening) |
 | 403 | `quota_exceeded` | Kuota generate undangan habis (3 gratis / 15 premium) |
 | 403 | `guest_limit_reached` | Batas 50 tamu (gratis) |
 | 403 | `invitation_limit_reached` | Batas jumlah undangan per akun (TBD, 04 §6.1) |
@@ -97,7 +97,8 @@ Error pada **job** disimpan di job (`error.code`): `ai_unavailable`, `ai_rate_li
 | `ceremony.time`, `ceremony.label` | tidak | `HH:MM` 24 jam / ≤ 40 | gratis |
 | `reception` | tidak | `{time?, location}`; `location` ≤ 200 | gratis |
 | `notes` | tidak | ≤ 500 | gratis |
-| `color_theme` | tidak | ≤ 80 | **premium** |
+| `color_theme` | tidak | ≤ 80 | gratis (Q27) |
+| `design_notes` | tidak | ≤ 300 (lebih panjang dipotong) | gratis (Q27); keinginan desain, dipakai AI hanya untuk tampilan |
 | `gifts` | tidak | ≤ 5 item; `bank` ≤ 30, `account_number` `^[0-9 .-]{5,30}$`, `account_name` ≤ 60 | **premium** |
 
 Semua teks: dinormalisasi (NFC), karakter kontrol dibuang, `<` dan `>` diganti spasi, dipangkas (lihat 07 §1).

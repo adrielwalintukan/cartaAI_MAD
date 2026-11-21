@@ -46,7 +46,7 @@ export default async function TemplateDetail({ params }: { params: Promise<{ slu
         {[
           { h: "Cara memakainya", b: "Pilih gaya ini saat membuat undangan. AI memakai palet, suasana, dan jenis hurufnya sebagai arahan, lalu menyusun tata letak dari datamu." },
           { h: "Tips", b: "Gunakan foto beresolusi tinggi (paket Premium) agar undangan terlihat jernih di semua perangkat." },
-          { h: "Ketersediaan", b: "Gaya ini tersedia di paket Premium. Paket Gratis memakai gaya bawaan Editorial Romantis." },
+          { h: "Ketersediaan", b: "Gaya ini tersedia untuk semua paket, Gratis maupun Premium." },
         ].map((x) => (
           <div key={x.h} className="rule pt-6">
             <h2 className="mb-3 text-[22px] font-medium tracking-tight">{x.h}</h2>

@@ -120,7 +120,7 @@ Setiap kriteria ditulis agar bisa diuji (pytest untuk server, checklist QA manua
 ### F-03 Preset gaya / template (M) — Q18
 - Daftar preset (gambar preview + brief desain: palet, mood, tipografi) dan opsi "Bebas".
 - AC1: memilih preset menyertakan brief-nya dalam prompt; "Bebas" memakai tema warna tulisan pengguna.
-- AC2: preset hanya bisa dipilih pada undangan Premium (Q17); Gratis memakai gaya bawaan.
+- AC2: semua preset bisa dipilih di semua paket (Q27, mengubah Q17); pengguna juga bisa menulis tema warna dan keinginan desain (`design_notes`).
 - AC3: jumlah dan nama preset awal: **TBD** (usulan minimal 3 gaya, dari yang ada: elegan, formal, simple).
 
 ### F-04 Link undangan publik `/u/<slug>?to=` (M) — Q14, Q19

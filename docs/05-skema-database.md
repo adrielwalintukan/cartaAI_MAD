@@ -79,13 +79,13 @@ lokal email). Tidak ada kolom `email` (sumber: `auth.users`; backend mengambilny
 | `description` | text | null |
 | `brief` | text | not null — "brief desain" (palet, mood, tipografi) yang dikirim ke AI |
 | `preview_url` | text | null — gambar preview (statis di Vercel atau Storage; TBD) |
-| `premium_only` | boolean | default false (Q17: pilihan gaya = premium) |
+| `premium_only` | boolean | default false (Q27: semua preset untuk semua paket; kolom dipertahankan) |
 | `is_active` | boolean | default true |
 | `sort_order` | int | default 0 |
 
 Seed awal: `default` (gratis, arah visual Q10), `elegan`, `formal`, `simple` (premium, dari aset `mobile/assets/templates`;
 `preview_url` masih kosong/TBD), dan `bebas` (premium; AI menentukan dari tema warna user). Brief gaya kelas contoh ini
-boleh disetel ulang lewat dashboard Supabase atau migrasi baru (Q23).
+boleh disetel ulang lewat dashboard Supabase atau migrasi baru (Q23). Migrasi `20261121000000_design_presets.sql` (Q27) membuat semua preset gratis, menulis ulang brief (palet, huruf, ornamen kit, animasi), dan menambah `nusantara` serta `taman`.
 
 ### 3.3 `invitations`
 | Kolom | Tipe | Constraint |
