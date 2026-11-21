@@ -13,8 +13,7 @@ export const planLabel = (p: Plan) => (p === 'premium' ? 'Premium' : 'Gratis') a
 
 export const errMsg = (e: unknown) => (e instanceof Error && e.message ? e.message : 'Terjadi kesalahan. Coba lagi sebentar lagi.');
 
-/** Sisa hari sampai `iso`; null bila tidak ada tanggal. */
-export const daysLeft = (iso: string | null) => (iso ? Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000) : null);
+export { daysLeft } from '../dashboard/summary';
 
 /** Web: salin ke papan klip. Native: lembar bagikan sistem (tanpa dependensi tambahan). */
 export async function shareLink(url: string): Promise<'copied' | 'shared'> {
