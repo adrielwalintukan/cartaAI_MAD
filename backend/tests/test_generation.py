@@ -177,3 +177,26 @@ def test_free_snapshot_uses_chosen_preset(settings):
     inv = {"plan": "free", "data": {"color_theme": "sage"}}
     snap = generation.build_snapshot(settings, inv, {"id": "nusantara", "brief": "Batik."}, [])
     assert snap["preset_id"] == "nusantara" and snap["preset_brief"] == "Batik."
+
+
+PHOTO = "https://x.supabase.co/storage/v1/object/public/invitation-assets/i/cover.jpg"
+WITH_PHOTO = GOOD.replace("<h1>", f'<img src="{PHOTO}" alt=""><h1>')
+
+
+def test_output_ignoring_photos_is_retried(monkeypatch, settings):
+    outs = [GOOD, WITH_PHOTO]
+    monkeypatch.setattr(gemini, "generate_design", lambda *a, **k: (outs.pop(0), "m"))
+    doc, _ = generation._generate_valid(settings, "s", "u", ("Adriel", "Tiara"), None, [PHOTO])
+    assert PHOTO in doc and not outs
+
+
+def test_photoless_output_accepted_on_last_attempt(monkeypatch, settings):
+    n = []
+    monkeypatch.setattr(gemini, "generate_design", lambda *a, **k: (n.append(1) or GOOD, "m"))
+    doc, _ = generation._generate_valid(settings, "s", "u", ("Adriel", "Tiara"), None, [PHOTO])
+    assert doc and len(n) == generation.MAX_ATTEMPTS
+
+
+def test_photo_urls_from_snapshot():
+    snap = {"assets": {"cover": "c", "groom": None, "bride": "b", "gallery": ["g1", "g2"]}}
+    assert generation._photo_urls(snap) == ["c", "b", "g1", "g2"]

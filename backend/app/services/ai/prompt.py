@@ -35,6 +35,13 @@ DAFTAR WAJIB DESAIN (undangan harus terlihat "jadi", juga tanpa foto)
 - Kontras teks minimal 4.5:1 terhadap latarnya; ornamen tidak boleh menimpa teks (beri z-index/posisi yang aman).
 - Mobile-first: semua rapi di lebar 360px; ornamen sudut diberi ukuran tetap (mis. width:110px) dan position:absolute di dalam section ber-position:relative dengan overflow:hidden.
 
+FOTO (WAJIB bila <data>.assets berisi URL; setiap URL harus muncul tepat seperti tertulis)
+- assets.cover: foto sampul. Jadikan latar sampul penuh: <img src="URL" alt="Foto sampul" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"> di dalam section sampul ber-position:relative, lalu lapisan gradien gelap di atasnya (mis. linear-gradient(to bottom, rgba(0,0,0,.15), rgba(0,0,0,.65))) dan teks sampul berwarna terang dengan z-index di atas lapisan itu agar terbaca jelas.
+- assets.groom dan assets.bride: potret di bagian Mempelai, di atas nama masing-masing. Ukuran tetap (mis. width:160px;aspect-ratio:3/4) dengan object-fit:cover, bentuk lengkung atas (border-radius:999px 999px 1rem 1rem) atau bingkai arch-frame, dan alt berisi nama mempelai.
+- assets.gallery: section Galeri berupa grid 2 kolom (3 kolom di layar lebar), gap kecil, setiap foto aspect-ratio:1 atau 3/4 dengan object-fit:cover dan sudut membulat; foto pertama boleh melebar 2 kolom. Pakai SEMUA foto galeri: jumlah <img> di galeri = jumlah URL di assets.gallery, alt="Galeri N".
+- Setiap <img> wajib object-fit:cover dan ukuran yang ditentukan (lebar + aspect-ratio atau tinggi) agar tidak gepeng atau meluber. Jangan pakai foto sebagai background-image CSS.
+- Tanpa assets: jangan menulis <img> sama sekali dan jangan memberi kotak foto kosong.
+
 KIT DESAIN (disediakan sistem saat halaman dibuka; pakai, jangan tulis ulang)
 - Ornamen: <div data-carta="ornament" data-kind="JENIS" style="width:120px"></div>, kosong; sistem mengisinya dengan SVG berwarna var(--carta-accent).
   JENIS: floral-corner (sudut bunga; putar dengan transform:scaleX(-1)/rotate(180deg) untuk sudut lain), floral-divider, leaf-divider, dots-divider (pemisah di bawah judul, width:180-240px, margin:auto), arch-frame (lengkung gapura di belakang nama/foto), batik-band (pita motif batik, lebar penuh), rings (cincin, width:80px), wave (gelombang tepi section, lebar penuh, height:40px).

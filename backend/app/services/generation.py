@@ -114,7 +114,8 @@ def run_job(db, s: Settings, job_id: str) -> None:
             stage("prompting")
             system, user_msg = prompt.build_messages(snap, snap.get("preset_brief") or "")
             stage("generating")
-            doc, model = _generate_valid(s, system, user_msg, (data.groom.name, data.bride.name), beat)
+            doc, model = _generate_valid(s, system, user_msg, (data.groom.name, data.bride.name), beat,
+                                         _photo_urls(snap))
             stage("sanitizing")
             clean = sanitize(doc, SanitizeCtx(job["invitation_id"], s.storage_public_prefix))
             stage("injecting")
@@ -131,12 +132,23 @@ def run_job(db, s: Settings, job_id: str) -> None:
             _fail(db, job_id, "internal_error")
 
 
-def _generate_valid(s: Settings, system: str, user_msg: str, names, beat) -> tuple[str, str]:
+def _photo_urls(snap: dict) -> list[str]:
+    a = snap.get("assets") or {}
+    return [u for u in (a.get("cover"), a.get("groom"), a.get("bride"), *(a.get("gallery") or [])) if u]
+
+
+def _generate_valid(s: Settings, system: str, user_msg: str, names, beat, photos=()) -> tuple[str, str]:
     last: Exception = InvalidOutput("kosong")
-    for _ in range(MAX_ATTEMPTS):
+    for attempt in range(1, MAX_ATTEMPTS + 1):
         try:
             raw, model = gemini.generate_design(s, system, user_msg, heartbeat=beat)
-            return extract_document(raw, names), model
+            doc = extract_document(raw, names)
+            # Model cadangan kadang mengabaikan foto pengguna: minta ulang; percobaan terakhir tetap diterima.
+            if attempt < MAX_ATTEMPTS and any(u not in doc for u in photos):
+                last = InvalidOutput("foto pengguna tidak dipakai")
+                log.warning("percobaan %d: foto pengguna tidak dipakai (model=%s)", attempt, model)
+                continue
+            return doc, model
         except InvalidOutput as e:
             last = e
         except gemini.GeminiError as e:

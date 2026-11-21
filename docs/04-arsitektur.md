@@ -258,8 +258,8 @@ Aturan keandalan:
   versi, `generations_used`, status job). Job gagal tidak memakan kuota.
 - **Heartbeat**: `heartbeat_at` diperbarui tiap tahap dan tiap percobaan Gemini.
 - **Pemulihan** `recover_stale_jobs()`: dijalankan saat startup (lifespan) dan setiap kali ada polling job. Job
-  `queued`/`running` dengan `heartbeat_at` lebih tua dari `JOB_STALE_AFTER_SECONDS` (default 120 dtk; batas
-  Gemini per panggilan 90 dtk) → diantrikan ulang (`attempt+1`, maks 2), lewat itu `failed` dengan
+  `queued`/`running` dengan `heartbeat_at` lebih tua dari `JOB_STALE_AFTER_SECONDS` (default 360 dtk; batas
+  Gemini per panggilan 240 dtk, harus lebih kecil) → diantrikan ulang (`attempt+1`, maks 2), lewat itu `failed` dengan
   `error_code='worker_lost'`. Pengguna dapat mencoba lagi tanpa kehilangan kuota.
 - Bersih-bersih saat startup: aset `pending` > 24 jam dihapus.
 - Konkurensi proses dibatasi `Semaphore(2)` agar RAM 512 MB tidak habis dan kuota Gemini terjaga.
@@ -315,7 +315,7 @@ Kunci lama (Midtrans, Gemini, Supabase lama) wajib di-rotate pemilik (lihat 08, 
 | `GEMINI_API_KEY_FALLBACK` | tidak | rahasia | Dipakai saat 429/503 pada key utama (Q22) |
 | `GEMINI_MODEL` | tidak | `gemini-3.1-flash-lite` | Q22; chatbot dan cadangan generate |
 | `GEMINI_DESIGN_MODEL` | tidak | `gemini-3.5-flash` | Q27; model utama generate undangan |
-| `GEMINI_TIMEOUT_SECONDS` | tidak | `90` | Per panggilan |
+| `GEMINI_TIMEOUT_SECONDS` | tidak | `240` | Per panggilan; model desain butuh 85-125 dtk untuk undangan berfoto |
 | `GEMINI_MAX_OUTPUT_TOKENS` | tidak | `32768` | TBD setelah uji |
 | `MIDTRANS_SERVER_KEY` | ya | rahasia | Sandbox dulu |
 | `MIDTRANS_IS_PRODUCTION` | tidak | `false` | Memperbaiki B7. Production: TBD (akun belum ada) |
@@ -332,7 +332,7 @@ Kunci lama (Midtrans, Gemini, Supabase lama) wajib di-rotate pemilik (lihat 08, 
 | `CHAT_DAILY_LIMIT` | tidak | `20` | Q9 |
 | `MAX_INVITATIONS_PER_USER` | tidak | `5` | **TBD** (belum diputuskan; nilai awal sementara) |
 | `MAX_IMAGE_BYTES` / `MAX_AUDIO_BYTES` | tidak | `5242880` / `10485760` | **[Keputusan]** default 5 MB / 10 MB |
-| `JOB_STALE_AFTER_SECONDS` | tidak | `120` | Bagian 4 |
+| `JOB_STALE_AFTER_SECONDS` | tidak | `360` | Bagian 4 |
 | `PYTHON_VERSION` | tidak | TBD | Pin versi di Render |
 
 Variabel lama yang **dihapus**: `SUPABASE_KEY`, `SUPABASE_SERVICE_KEY`, `GOOGLE_API_KEY`, `GOOGLE_API_KEY1`,

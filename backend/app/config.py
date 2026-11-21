@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     gemini_api_key_fallback: str = ""
     gemini_model: str = "gemini-3.1-flash-lite"  # chat + cadangan generate
     gemini_design_model: str = "gemini-3.5-flash"  # generate undangan (Q27)
-    gemini_timeout_seconds: int = 90
+    gemini_timeout_seconds: int = 240
     gemini_max_output_tokens: int = 32768
 
     midtrans_server_key: str
@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     max_invitations_per_user: int = 5
     max_image_bytes: int = 5 * 1024 * 1024
     max_audio_bytes: int = 10 * 1024 * 1024
-    job_stale_after_seconds: int = 120
+    job_stale_after_seconds: int = 360
 
     @property
     def cors_origins(self) -> list[str]:
