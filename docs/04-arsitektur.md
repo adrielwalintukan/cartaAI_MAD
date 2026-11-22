@@ -288,7 +288,7 @@ tabel yang sama via `select ... for update skip locked`) tanpa mengubah skema/AP
 
 ## 5. Penyajian undangan dan keamanan (ringkas)
 
-- `/u/{slug}` dilayani FastAPI, bukan Vercel. Sejak Q26 rewrite ada di `web/vercel.json` (domain situs publik), dengan host sementara `HOST-RENDER-TBD`:
+- `/u/{slug}` dilayani FastAPI, bukan Vercel. Sejak Q26 rewrite ada di `web/vercel.json` (domain situs publik), dengan host sementara `HOST-RENDER-TBD` (penjaga `web/scripts/check-deploy-config.mjs` menggagalkan build Vercel selama host masih placeholder):
   `{ "source": "/u/:slug", "destination": "https://<host-render>/u/:slug" }` (host Render: TBD sampai F4;
   rewrite tidak bisa membaca env, nilai ditulis saat F4).
 - Karena rewrite membuat halaman undangan **satu origin** dengan aplikasi web, isolasi dilakukan dengan header CSP
@@ -333,6 +333,7 @@ Kunci lama (Midtrans, Gemini, Supabase lama) wajib di-rotate pemilik (lihat 08, 
 | `MAX_INVITATIONS_PER_USER` | tidak | `5` | **TBD** (belum diputuskan; nilai awal sementara) |
 | `MAX_IMAGE_BYTES` / `MAX_AUDIO_BYTES` | tidak | `5242880` / `10485760` | **[Keputusan]** default 5 MB / 10 MB |
 | `JOB_STALE_AFTER_SECONDS` | tidak | `360` | Bagian 4 |
+| `TRUSTED_PROXY_COUNT` | tidak | `1` | Jumlah proxy tepercaya untuk membaca `X-Forwarded-For` (rate limit). Alamat klien = entri ke-N dari kanan; `0` = abaikan header |
 | `PYTHON_VERSION` | tidak | TBD | Pin versi di Render |
 
 Variabel lama yang **dihapus**: `SUPABASE_KEY`, `SUPABASE_SERVICE_KEY`, `GOOGLE_API_KEY`, `GOOGLE_API_KEY1`,

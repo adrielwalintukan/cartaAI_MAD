@@ -350,9 +350,11 @@ Langkah:
 | `pending`, `authorize` | — | tetap `pending` (perbarui `payment_type`, `transaction_status`) |
 | `deny`, `cancel`, `failure` | — | → `failed` (hanya dari `pending`) |
 | `expire` | — | → `expired` (hanya dari `pending`) |
-| `refund`, `partial_refund`, `chargeback` | — | → `refunded` bila `paid`; **downgrade plan undangan: TBD** (dicatat, penanganan manual lewat dashboard) |
+| `refund`, `chargeback` | — | → `refunded` bila `paid`, dan undangan kembali `free` (RPC `refund_order`, atomik; `expires_at` dibatasi ke masa aktif Gratis) |
+| `partial_refund` | — | tidak mengubah apa pun: order tetap `paid`, Premium tetap aktif; dicatat di log dan `payment_events` untuk ditinjau manual |
 
-Idempoten: transisi hanya dari `pending` (kecuali `paid → refunded`); `paid` memanggil RPC `mark_order_paid`
+Idempoten: transisi hanya dari `pending` (kecuali `paid → refunded`); `paid` memanggil RPC `mark_order_paid`, yang menerima order `pending` **maupun `expired`**
+(settlement terlambat: order internal ditutup 23 jam, transaksi Midtrans berlaku 24 jam; pembayaran valid tidak boleh hilang)
 (satu transaksi: order `paid` + `invitations.plan = 'premium'`, `expires_at = now + 365 hari`; mengembalikan `false`
 bila sudah diproses). Event berulang atau tidak berurutan (mis. `pending` setelah `settlement`) tidak mengubah apa pun.
 

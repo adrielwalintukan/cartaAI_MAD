@@ -30,3 +30,10 @@ def mark_paid(db, mid: str, tx_id, payment_type, fraud, days: int) -> bool:
                                      "p_payment_type": payment_type, "p_fraud_status": fraud,
                                      "p_premium_days": days}).execute()
     return bool(res.data)
+
+
+def refund_order(db, mid: str, tx_status: str, free_days: int) -> bool:
+    """Refund/chargeback penuh: order -> refunded dan undangan kembali Gratis, atomik (RPC). False bila order bukan paid."""
+    res = db.rpc("refund_order", {"p_midtrans_order_id": mid, "p_transaction_status": tx_status,
+                                  "p_free_days": free_days}).execute()
+    return bool(res.data)

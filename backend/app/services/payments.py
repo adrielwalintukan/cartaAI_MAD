@@ -17,6 +17,13 @@ from app.repos.common import is_unique_violation, now, parse_ts
 
 log = logging.getLogger(__name__)
 
+# Transaksi Snap berlaku 24 jam di Midtrans. Order pending dipakai ulang hanya selama masih ada >= 1 jam, agar pengguna tidak
+# diberi tautan yang hampir kedaluwarsa. Order yang sudah diganti tetap bisa dibayar sampai Midtrans menutupnya; settlement
+# terlambat tetap mengaktifkan Premium karena RPC mark_order_paid menerima order 'expired'.
+_MIDTRANS_EXPIRY_HOURS = 24
+_REUSE_HOURS = _MIDTRANS_EXPIRY_HOURS - 1
+_MAX_WEBHOOK_BYTES = 64 * 1024
+
 
 def signature(order_id: str, status_code: str, gross: str, server_key: str) -> str:
     return hashlib.sha512(f"{order_id}{status_code}{gross}{server_key}".encode()).hexdigest()
@@ -54,7 +61,7 @@ def create_order(db, s: Settings, user: AuthUser, invitation_id: str) -> tuple[d
         raise AppError("already_premium", 409, "Undangan ini sudah Premium.")
     pending = repo.pending_for(db, invitation_id)
     if pending:
-        if pending.get("redirect_url") and now() - parse_ts(pending["created_at"]) < timedelta(hours=23):
+        if pending.get("redirect_url") and now() - parse_ts(pending["created_at"]) < timedelta(hours=_REUSE_HOURS):
             return _view(pending), False
         repo.update_if_status(db, pending["id"], "pending", {"status": "expired"})
     oid = str(uuid4())
@@ -74,7 +81,7 @@ def create_order(db, s: Settings, user: AuthUser, invitation_id: str) -> tuple[d
                           "quantity": 1}],
         "customer_details": {"email": user.email} if user.email else {},
         "callbacks": {"finish": f"{s.web_base_url.rstrip('/')}/app/pembayaran/{oid}"},
-        "expiry": {"unit": "hours", "duration": 24},
+        "expiry": {"unit": "hours", "duration": _MIDTRANS_EXPIRY_HOURS},
     }
     try:
         res = _create_snap(s, params)
@@ -101,8 +108,10 @@ def decide(tx_status: str, fraud: str | None) -> str | None:
         return "failed"
     if tx_status == "expire":
         return "expired"
-    if tx_status in ("refund", "partial_refund", "chargeback"):
+    if tx_status in ("refund", "chargeback"):
         return "refunded"
+    if tx_status == "partial_refund":
+        return "partial_refund"  # Premium tetap aktif; dicatat untuk ditinjau manual
     return None
 
 
@@ -118,8 +127,11 @@ def apply_status(db, s: Settings, order: dict, p: dict) -> str:
         repo.update_if_status(db, order["id"], "pending", {"status": outcome, "transaction_status": tx,
                                                            "fraud_status": fraud, "payment_type": ptype})
     elif outcome == "refunded":
-        repo.update_if_status(db, order["id"], "paid", {"status": "refunded", "transaction_status": tx})
-        log.warning("order %s direfund/chargeback; downgrade plan TBD (manual)", mid)
+        # Atomik di DB: order -> refunded dan Premium dicabut (undangan kembali Gratis).
+        if repo.refund_order(db, mid, tx, s.free_active_days):
+            log.warning("order %s %s: Premium dicabut", mid, tx)
+    elif outcome == "partial_refund":
+        log.warning("order %s partial_refund: Premium tetap aktif, perlu tinjauan manual", mid)
     elif outcome == "pending":
         repo.update_if_status(db, order["id"], "pending", {"transaction_status": tx, "fraud_status": fraud,
                                                            "payment_type": ptype})
@@ -135,9 +147,11 @@ def _amount_matches(order: dict, p: dict) -> bool:
 
 
 def handle_webhook(db, s: Settings, payload: dict) -> dict:
-    repo.log_event(db, payload.get("order_id"), "webhook", payload)
+    # Endpoint publik: tolak dulu bila signature salah; hanya notifikasi asli yang dicatat (tak ada tulisan DB tanpa autentikasi).
     if not verify_signature(payload, s.midtrans_server_key):
+        log.warning("webhook ditolak: signature tidak valid order=%s", str(payload.get("order_id"))[:80])
         raise AppError("invalid_signature", 403, "Signature tidak valid.")
+    repo.log_event(db, payload.get("order_id"), "webhook", payload)
     order = repo.get_by_midtrans_id(db, str(payload["order_id"]))
     if not order:
         log.info("webhook untuk order tak dikenal: %s", payload.get("order_id"))

@@ -27,8 +27,11 @@ def get_order(order_id: str, user: AuthUser = Depends(get_current_user), db=Depe
 
 @router.post("/webhook")
 async def webhook(request: Request, db=Depends(get_db), s: Settings = Depends(get_settings)):
+    body = await request.body()
+    if len(body) > svc._MAX_WEBHOOK_BYTES:
+        raise AppError("payload_too_large", 413, "Permintaan terlalu besar.")
     try:
-        payload = json.loads(await request.body())
+        payload = json.loads(body)
     except ValueError:
         payload = None
     if not isinstance(payload, dict):

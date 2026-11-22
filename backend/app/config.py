@@ -42,6 +42,8 @@ class Settings(BaseSettings):
     max_image_bytes: int = 5 * 1024 * 1024
     max_audio_bytes: int = 10 * 1024 * 1024
     job_stale_after_seconds: int = 360
+    # Jumlah proxy tepercaya di depan aplikasi (mis. 1 untuk Render). 0 = abaikan X-Forwarded-For dan pakai alamat sambungan langsung.
+    trusted_proxy_count: int = 1
 
     @property
     def cors_origins(self) -> list[str]:

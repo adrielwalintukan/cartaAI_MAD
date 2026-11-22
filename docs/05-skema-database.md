@@ -616,6 +616,10 @@ begin
   where id = v_invitation;
   return true;
 end $$;
+-- Diubah oleh migrasi 20261123000000_late_settlement_refund.sql (review PR #1): `where ... status in ('pending', 'expired')`
+-- agar settlement terlambat tetap mengaktifkan Premium, dan order pending lain untuk undangan itu ditutup (`expired`).
+-- Fungsi baru di migrasi yang sama: `refund_order(p_midtrans_order_id, p_transaction_status, p_free_days)` (service_role):
+-- order `paid` -> `refunded` dan `invitations.plan` -> `free` dengan `expires_at = least(expires_at, now + p_free_days)`, atomik.
 
 -- Kuota chat harian (hari WIB). Mengembalikan sisa kuota, atau -1 bila habis.
 create or replace function public.consume_chat_quota(p_user_id uuid, p_limit int)

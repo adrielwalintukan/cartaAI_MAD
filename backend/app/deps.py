@@ -57,10 +57,16 @@ def get_current_user(request: Request, db=Depends(get_db)) -> AuthUser:
 _hits: dict[str, list[float]] = {}
 
 
-def client_ip(request: Request) -> str:
-    fwd = request.headers.get("x-forwarded-for")
-    if fwd:
-        return fwd.split(",")[0].strip()
+def client_ip(request: Request, trusted_proxies: int | None = None) -> str:
+    """Alamat klien untuk rate limit. X-Forwarded-For hanya dipercaya sebanyak proxy tepercaya.
+
+    Tiap proxy menambahkan alamat peer-nya di KANAN header; isi di kiri bisa dipalsukan klien. Maka klien yang sebenarnya
+    adalah entri ke-N dari kanan (N = jumlah proxy tepercaya), bukan entri pertama.
+    """
+    n = get_settings().trusted_proxy_count if trusted_proxies is None else trusted_proxies
+    hops = [h.strip() for h in request.headers.get("x-forwarded-for", "").split(",") if h.strip()]
+    if n > 0 and len(hops) >= n:
+        return hops[-n]
     return request.client.host if request.client else "unknown"
 
 

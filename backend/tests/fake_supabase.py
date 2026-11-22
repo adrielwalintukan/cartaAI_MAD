@@ -279,7 +279,7 @@ class FakeSupabase:
     def rpc_mark_order_paid(self, p_midtrans_order_id, p_transaction_id, p_payment_type, p_fraud_status,
                             p_premium_days=365):
         o = next((o for o in self.tables["orders"]
-                  if o["midtrans_order_id"] == p_midtrans_order_id and o["status"] == "pending"), None)
+                  if o["midtrans_order_id"] == p_midtrans_order_id and o["status"] in ("pending", "expired")), None)
         if not o:
             return False
         o.update(status="paid", paid_at=_now(), transaction_status="settlement",
@@ -287,6 +287,22 @@ class FakeSupabase:
                  payment_type=p_payment_type or o["payment_type"], fraud_status=p_fraud_status or o["fraud_status"])
         inv = self.one("invitations", id=o["invitation_id"])
         inv.update(plan="premium", expires_at=(datetime.now(timezone.utc) + timedelta(days=p_premium_days)).isoformat())
+        for other in self.tables["orders"]:
+            if other["invitation_id"] == o["invitation_id"] and other["status"] == "pending" and other is not o:
+                other["status"] = "expired"
+        return True
+
+    def rpc_refund_order(self, p_midtrans_order_id, p_transaction_status, p_free_days=30):
+        o = next((o for o in self.tables["orders"]
+                  if o["midtrans_order_id"] == p_midtrans_order_id and o["status"] == "paid"), None)
+        if not o:
+            return False
+        o.update(status="refunded", transaction_status=p_transaction_status)
+        inv = self.one("invitations", id=o["invitation_id"])
+        if inv["plan"] == "premium":
+            limit = datetime.now(timezone.utc) + timedelta(days=p_free_days)
+            cur = datetime.fromisoformat(inv["expires_at"]) if inv.get("expires_at") else limit
+            inv.update(plan="free", expires_at=min(cur, limit).isoformat())
         return True
 
     def rpc_consume_chat_quota(self, p_user_id, p_limit):

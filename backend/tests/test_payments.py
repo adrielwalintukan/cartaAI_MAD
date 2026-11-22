@@ -187,3 +187,84 @@ def test_no_hardcoded_price_or_sandbox():
     root = pathlib.Path(__file__).parent.parent / "app"
     text = "\n".join(p.read_text(encoding="utf-8") for p in root.rglob("*.py") if p.name != "config.py")  # default env hanya di config.py
     assert "99000" not in text and "is_production=False" not in text
+
+
+# ---- Review PR #1: pembayaran terlambat, refund/chargeback, webhook palsu
+def _age_order(db, order_id, hours):
+    from datetime import datetime, timedelta, timezone
+    db.one("orders", id=order_id)["created_at"] = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
+
+
+def test_late_settlement_after_order_replaced_still_activates_premium(client, order, db, make_inv):
+    inv, o = order
+    _age_order(db, o["order_id"], 23.5)  # lewat jendela pakai-ulang, tetapi transaksi Midtrans masih berlaku
+    replacement = new_order(client, inv).json()
+    assert replacement["order_id"] != o["order_id"]
+    assert db.one("orders", id=o["order_id"])["status"] == "expired"
+    # pengguna membayar lewat tautan lama; settlement tiba setelah order internal 'expired'
+    assert hook(client, notif(o)).json() == {"status": "ok"}
+    assert db.one("orders", id=o["order_id"])["status"] == "paid"
+    assert db.one("invitations", id=inv["id"])["plan"] == "premium"
+    assert db.one("orders", id=replacement["order_id"])["status"] == "expired"  # tidak ada dua order pending
+
+
+def test_late_settlement_is_idempotent(client, order, db):
+    inv, o = order
+    _age_order(db, o["order_id"], 23.5)
+    new_order(client, inv)
+    hook(client, notif(o))
+    paid_at = db.one("orders", id=o["order_id"])["paid_at"]
+    hook(client, notif(o))
+    assert db.one("orders", id=o["order_id"])["paid_at"] == paid_at
+
+
+def test_invalid_signature_writes_nothing(client, order, db):
+    _, o = order
+    assert hook(client, notif(o, key="kunci-salah")).status_code == 403
+    assert hook(client, {"order_id": o["midtrans_order_id"]}).status_code == 403
+    assert client.post("/api/payments/webhook", content=b"[]").status_code == 403
+    assert db.tables["payment_events"] == []  # endpoint publik tidak boleh menulis DB tanpa signature valid
+
+
+def test_valid_signature_is_logged(client, order, db):
+    _, o = order
+    hook(client, notif(o))
+    assert len(db.tables["payment_events"]) == 1 and db.tables["payment_events"][0]["source"] == "webhook"
+
+
+def test_oversized_webhook_rejected_without_db_write(client, order, db):
+    _, o = order
+    big = notif(o, padding="x" * 70_000)
+    r = hook(client, big)
+    assert r.status_code == 413 and db.tables["payment_events"] == []
+
+
+@pytest.mark.parametrize("status", ["refund", "chargeback"])
+def test_full_refund_and_chargeback_revoke_premium(client, order, db, status):
+    inv, o = order
+    hook(client, notif(o))
+    assert db.one("invitations", id=inv["id"])["plan"] == "premium"
+    assert hook(client, notif(o, status=status)).json() == {"status": "ok"}
+    assert db.one("orders", id=o["order_id"])["status"] == "refunded"
+    row = db.one("invitations", id=inv["id"])
+    assert row["plan"] == "free"
+    from datetime import datetime, timezone
+    assert (datetime.fromisoformat(row["expires_at"]) - datetime.now(timezone.utc)).days <= 30  # masa aktif paket Gratis
+
+
+def test_partial_refund_keeps_premium_and_paid_order(client, order, db):
+    inv, o = order
+    hook(client, notif(o))
+    assert hook(client, notif(o, status="partial_refund")).json() == {"status": "ok"}
+    assert db.one("orders", id=o["order_id"])["status"] == "paid"
+    assert db.one("invitations", id=inv["id"])["plan"] == "premium"
+
+
+def test_refund_twice_is_idempotent_and_unpaid_refund_ignored(client, order, db, make_inv, snap):
+    inv, o = order
+    hook(client, notif(o, status="refund"))  # belum pernah paid: tidak mengubah apa pun
+    assert db.one("orders", id=o["order_id"])["status"] == "pending"
+    hook(client, notif(o))
+    hook(client, notif(o, status="refund"))
+    hook(client, notif(o, status="refund"))
+    assert db.one("orders", id=o["order_id"])["status"] == "refunded" and db.one("invitations", id=inv["id"])["plan"] == "free"
