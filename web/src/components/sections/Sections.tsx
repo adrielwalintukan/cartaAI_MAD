@@ -30,7 +30,7 @@ export function Manifesto() {
   });
   return (
     // Di desktop kartu 3D dari hero masih tampil di kanan section ini, jadi teks dibatasi ke kiri.
-    <section className="wrap flex min-h-[115svh] flex-col justify-center py-[clamp(96px,12vw,160px)]" aria-label="Manifesto">
+    <section className="wrap flex min-h-[62svh] flex-col justify-center py-[clamp(64px,12vw,160px)] md:min-h-[115svh]" aria-label="Manifesto">
       <p className="meta mb-8 text-ink-soft">(Kenapa CartaAI)</p>
       <p ref={ref} className="display max-w-[22ch] text-[clamp(2rem,5.2vw,5.2rem)] leading-[1.02] lg:max-w-[17ch] lg:text-[clamp(3rem,4.6vw,5.4rem)]">
         Undangan adalah sapaan pertama dari hari bahagiamu. Ia layak terasa <span className="serif-accent text-accent">milik kalian</span>, bukan template yang sama untuk semua orang.

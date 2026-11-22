@@ -59,7 +59,7 @@ export function Hero({ children }: { children?: React.ReactNode }) {
     const fadeIn = gsap.fromTo(".hero-fade", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 1.2, stagger: 0.08, delay: 0.5, paused: true });
     const off = onReady(() => fadeIn.play());
     // Teks hero menyingkir saat kartu keluar dari amplop.
-    gsap.to(".hero-copy", { yPercent: -14, opacity: 0, ease: "none", scrollTrigger: { trigger: hero.current, start: "30% top", end: "70% top", scrub: true } });
+    gsap.to(".hero-copy", { yPercent: -14, opacity: 0, ease: "none", scrollTrigger: { trigger: hero.current, start: () => (window.innerWidth < 1024 ? "8% top" : "30% top"), end: () => (window.innerWidth < 1024 ? "38% top" : "70% top"), scrub: true, invalidateOnRefresh: true } });
     // Ponsel/tablet: kartu naik melewati paragraf, jadi blok bawah menyingkir lebih awal.
     const mm = gsap.matchMedia();
     mm.add("(max-width: 1023px)", () => {

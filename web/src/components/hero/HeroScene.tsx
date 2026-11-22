@@ -71,13 +71,16 @@ function Envelope({ progress, style, onUserScroll }: { progress: RefObject<HeroP
     // 3) Section berikutnya: amplop jatuh, kartu turun ke tengah layar dan sedikit membesar
     //    (ponsel/tablet: kartu naik keluar layar agar teks tetap bersih).
     const fall = smooth(0, 0.55, o);
-    env.current.position.y = damp(env.current.position.y, -fall * 9, 8, dt);
-    const cardY = -0.16 + rise * 2.3 - (wide ? fall * 1.2 : -fall * 6);
+    // Ponsel/tablet: setelah kartu keluar dan membesar, amplop menyingkir ke bawah agar kartu mengisi layar.
+    const dropEnv = wide ? 0 : smooth(0.6, 1, p);
+    env.current.position.y = damp(env.current.position.y, -(fall + dropEnv) * 9, 8, dt);
+    const cardY = wide ? -0.16 + rise * 2.3 - fall * 1.2 : -0.16 + rise * 1.36 + fall * 8.5;
     card.current.position.y = damp(card.current.position.y, cardY, 8, dt);
     card.current.position.z = 0.03 + rise * 0.05;
     card.current.rotation.y = damp(card.current.rotation.y, wide ? fall * -0.22 : 0, 6, dt);
     // Di section berikutnya (desktop) kartu melebar dan memanjang seperti layar ponsel; isi yang tampil ikut menyesuaikan.
-    const sx = 1 + fall * (wide ? 0.3 : 0.12), sy = 1 + fall * (wide ? 0.62 : 0.12);
+    // Desktop: melebar/memanjang di section berikutnya. Ponsel: membesar saat keluar dari amplop (hampir selebar layar, setinggi ponsel).
+    const sx = wide ? 1 + fall * 0.3 : 1 + rise * 1.35, sy = wide ? 1 + fall * 0.62 : 1 + rise * 1.9;
     card.current.scale.set(pulse.current * sx, pulse.current * sy, 1);
     const cur = Math.max(0, shown.current) % textures.length;
     windowFrac[cur] = Math.min(1, ((CH * sy) / (CW * sx)) * (textures[cur].image.width / textures[cur].image.height));
