@@ -25,11 +25,23 @@ def get_order(order_id: str, user: AuthUser = Depends(get_current_user), db=Depe
     return svc.get_order(db, s, user, order_id)
 
 
+async def _read_limited(request: Request, limit: int) -> bytes:
+    """Baca body dengan batas: tolak lewat Content-Length bila ada, dan hentikan pembacaan begitu melewati batas."""
+    too_big = AppError("payload_too_large", 413, "Permintaan terlalu besar.")
+    declared = request.headers.get("content-length", "")
+    if declared.isdigit() and int(declared) > limit:
+        raise too_big
+    buf = bytearray()
+    async for chunk in request.stream():
+        buf += chunk
+        if len(buf) > limit:
+            raise too_big
+    return bytes(buf)
+
+
 @router.post("/webhook")
 async def webhook(request: Request, db=Depends(get_db), s: Settings = Depends(get_settings)):
-    body = await request.body()
-    if len(body) > svc._MAX_WEBHOOK_BYTES:
-        raise AppError("payload_too_large", 413, "Permintaan terlalu besar.")
+    body = await _read_limited(request, svc._MAX_WEBHOOK_BYTES)
     try:
         payload = json.loads(body)
     except ValueError:

@@ -354,7 +354,9 @@ Langkah:
 | `partial_refund` | — | tidak mengubah apa pun: order tetap `paid`, Premium tetap aktif; dicatat di log dan `payment_events` untuk ditinjau manual |
 
 Idempoten: transisi hanya dari `pending` (kecuali `paid → refunded`); `paid` memanggil RPC `mark_order_paid`, yang menerima order `pending` **maupun `expired`**
-(settlement terlambat: order internal ditutup 23 jam, transaksi Midtrans berlaku 24 jam; pembayaran valid tidak boleh hilang)
+(settlement terlambat: order internal ditutup 23 jam, transaksi Midtrans berlaku 24 jam; pembayaran valid tidak boleh hilang).
+Bila undangan sudah punya order `paid` lain, settlement berikutnya ditandai **`duplicate`** (pembayaran ganda): undangan tidak diubah, log `PEMBAYARAN GANDA` untuk refund manual di Midtrans, dan klien tetap melihat `paid`. Refund order `duplicate` tidak mencabut Premium yang sah.
+Body webhook dibaca bertahap dan dihentikan di 64 KB (413).
 (satu transaksi: order `paid` + `invitations.plan = 'premium'`, `expires_at = now + 365 hari`; mengembalikan `false`
 bila sudah diproses). Event berulang atau tidak berurutan (mis. `pending` setelah `settlement`) tidak mengubah apa pun.
 

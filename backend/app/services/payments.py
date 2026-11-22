@@ -47,9 +47,14 @@ def _fetch_status(s: Settings, midtrans_order_id: str) -> dict:
                                   server_key=s.midtrans_server_key).transactions.status(midtrans_order_id)
 
 
+def _client_status(status: str) -> str:
+    """Pembayaran ganda tetap uang yang diterima dan Premium aktif: klien melihat 'paid' (rincian hanya internal)."""
+    return "paid" if status == "duplicate" else status
+
+
 def _view(o: dict) -> dict:
     return {"order_id": o["id"], "midtrans_order_id": o["midtrans_order_id"], "amount": o["amount"],
-            "status": o["status"], "redirect_url": o.get("redirect_url"), "snap_token": o.get("snap_token")}
+            "status": _client_status(o["status"]), "redirect_url": o.get("redirect_url"), "snap_token": o.get("snap_token")}
 
 
 def create_order(db, s: Settings, user: AuthUser, invitation_id: str) -> tuple[dict, bool]:
@@ -122,7 +127,12 @@ def apply_status(db, s: Settings, order: dict, p: dict) -> str:
     outcome = decide(tx, fraud)
     mid = order["midtrans_order_id"]
     if outcome == "paid":
-        repo.mark_paid(db, mid, tid, ptype, fraud, s.premium_active_days)  # False bila sudah diproses
+        # False bila sudah diproses ATAU pembayaran ganda (undangan sudah punya order paid lain; DB menandainya 'duplicate').
+        if not repo.mark_paid(db, mid, tid, ptype, fraud, s.premium_active_days):
+            cur = repo.get_by_midtrans_id(db, mid)
+            if cur and cur["status"] == "duplicate" and order["status"] != "duplicate":
+                log.error("PEMBAYARAN GANDA order=%s untuk undangan %s: perlu refund manual di Midtrans",
+                          mid, order["invitation_id"])
     elif outcome in ("failed", "expired"):
         repo.update_if_status(db, order["id"], "pending", {"status": outcome, "transaction_status": tx,
                                                            "fraud_status": fraud, "payment_type": ptype})
@@ -179,6 +189,6 @@ def get_order(db, s: Settings, user: AuthUser, order_id: str) -> dict:
             apply_status(db, s, order, st)
             order = repo.get_owned(db, order_id, user.id) or order
     inv = inv_repo.get_owned(db, order["invitation_id"], user.id)
-    return {"order_id": order["id"], "invitation_id": order["invitation_id"], "status": order["status"],
+    return {"order_id": order["id"], "invitation_id": order["invitation_id"], "status": _client_status(order["status"]),
             "amount": order["amount"], "paid_at": order.get("paid_at"),
             "invitation_plan": inv["plan"] if inv else None}

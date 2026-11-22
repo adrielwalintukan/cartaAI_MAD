@@ -268,3 +268,96 @@ def test_refund_twice_is_idempotent_and_unpaid_refund_ignored(client, order, db,
     hook(client, notif(o, status="refund"))
     hook(client, notif(o, status="refund"))
     assert db.one("orders", id=o["order_id"])["status"] == "refunded" and db.one("invitations", id=inv["id"])["plan"] == "free"
+
+
+# ---- Re-review PR #1: pembayaran ganda dan batas body webhook
+def _replaced_pair(client, inv, db, o):
+    _age_order(db, o["order_id"], 23.5)
+    replacement = new_order(client, inv).json()
+    assert replacement["order_id"] != o["order_id"]
+    return replacement
+
+
+def test_old_order_settling_after_replacement_paid_is_flagged_duplicate_not_paid(client, order, db):
+    inv, o = order
+    replacement = _replaced_pair(client, inv, db, o)
+    assert hook(client, notif(replacement)).json() == {"status": "ok"}  # pengganti lunas lebih dulu
+    expires = db.one("invitations", id=inv["id"])["expires_at"]
+    assert hook(client, notif(o)).json() == {"status": "ok"}  # settlement order lama menyusul
+    assert db.one("orders", id=replacement["order_id"])["status"] == "paid"
+    assert db.one("orders", id=o["order_id"])["status"] == "duplicate"
+    assert [x["status"] for x in db.tables["orders"]].count("paid") == 1
+    assert db.one("invitations", id=inv["id"])["expires_at"] == expires  # masa aktif tidak diperpanjang lagi
+
+
+def test_duplicate_payment_is_logged_for_manual_refund_and_idempotent(client, order, db, caplog):
+    inv, o = order
+    replacement = _replaced_pair(client, inv, db, o)
+    hook(client, notif(replacement))
+    with caplog.at_level("ERROR"):
+        hook(client, notif(o))
+    assert "PEMBAYARAN GANDA" in caplog.text and "refund manual" in caplog.text
+    caplog.clear()
+    with caplog.at_level("ERROR"):
+        hook(client, notif(o))  # pengiriman ulang tidak mencatat atau mengubah lagi
+    assert "PEMBAYARAN GANDA" not in caplog.text and db.one("orders", id=o["order_id"])["status"] == "duplicate"
+
+
+def test_client_sees_paid_for_duplicate_order(client, order, db):
+    inv, o = order
+    replacement = _replaced_pair(client, inv, db, o)
+    hook(client, notif(replacement))
+    hook(client, notif(o))
+    r = client.get(f"/api/payments/orders/{o['order_id']}", headers=auth(A)).json()
+    assert r["status"] == "paid" and r["invitation_plan"] == "premium"
+
+
+def test_refunding_the_duplicate_does_not_revoke_valid_premium(client, order, db):
+    inv, o = order
+    replacement = _replaced_pair(client, inv, db, o)
+    hook(client, notif(replacement))
+    hook(client, notif(o))
+    hook(client, notif(o, status="refund"))  # refund pembayaran ganda di Midtrans
+    assert db.one("orders", id=o["order_id"])["status"] == "duplicate"
+    assert db.one("orders", id=replacement["order_id"])["status"] == "paid"
+    assert db.one("invitations", id=inv["id"])["plan"] == "premium"
+
+
+def test_second_purchase_after_full_refund_is_not_duplicate(client, order, db, snap):
+    inv, o = order
+    hook(client, notif(o))
+    hook(client, notif(o, status="refund"))  # undangan kembali Gratis
+    again = new_order(client, inv).json()
+    hook(client, notif(again))
+    assert db.one("orders", id=again["order_id"])["status"] == "paid"
+    assert db.one("invitations", id=inv["id"])["plan"] == "premium"
+
+
+def test_chunked_oversized_webhook_is_cut_off_without_db_write(client, order, db):
+    _, o = order
+    chunks = (b"x" * 20_000 for _ in range(10))  # tanpa Content-Length: dibaca bertahap lalu dihentikan di batas
+    r = client.post("/api/payments/webhook", content=chunks)
+    assert r.status_code == 413 and db.tables["payment_events"] == []
+
+
+def test_declared_oversized_content_length_rejected_early(client, order):
+    import app.routers.payments as router
+    from starlette.requests import Request
+    import asyncio
+
+    consumed = []
+
+    async def stream():
+        consumed.append(1)
+        yield b"{}"
+
+    req = Request({"type": "http", "headers": [(b"content-length", b"999999")]})
+    req.stream = stream  # type: ignore[method-assign]
+    with pytest.raises(router.AppError) as e:
+        asyncio.run(router._read_limited(req, 64 * 1024))
+    assert e.value.status == 413 and consumed == []  # ditolak dari header, body tidak dibaca
+
+
+def test_normal_webhook_still_accepted_with_streaming_reader(client, order, db):
+    _, o = order
+    assert hook(client, notif(o)).json() == {"status": "ok"} and db.one("orders", id=o["order_id"])["status"] == "paid"

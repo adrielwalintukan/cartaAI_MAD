@@ -282,6 +282,13 @@ class FakeSupabase:
                   if o["midtrans_order_id"] == p_midtrans_order_id and o["status"] in ("pending", "expired")), None)
         if not o:
             return False
+        fields = dict(paid_at=_now(), transaction_status="settlement",
+                      transaction_id=p_transaction_id or o["transaction_id"],
+                      payment_type=p_payment_type or o["payment_type"], fraud_status=p_fraud_status or o["fraud_status"])
+        if any(x["invitation_id"] == o["invitation_id"] and x["status"] == "paid" and x is not o
+               for x in self.tables["orders"]):
+            o.update(status="duplicate", **fields)  # pembayaran ganda: undangan tidak diubah
+            return False
         o.update(status="paid", paid_at=_now(), transaction_status="settlement",
                  transaction_id=p_transaction_id or o["transaction_id"],
                  payment_type=p_payment_type or o["payment_type"], fraud_status=p_fraud_status or o["fraud_status"])

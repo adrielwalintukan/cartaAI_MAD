@@ -179,7 +179,7 @@ backend (06 §11).
 | `invitation_id` | uuid | not null, FK `invitations(id)` on delete cascade |
 | `user_id` | uuid | not null, FK `profiles(id)` on delete cascade |
 | `amount` | int | not null, > 0 (rupiah; dari `PREMIUM_PRICE_IDR`, B7) |
-| `status` | text | `pending` \| `paid` \| `failed` \| `expired` \| `refunded` |
+| `status` | text | `pending` \| `paid` \| `failed` \| `expired` \| `refunded` \| `duplicate` (pembayaran ganda; lihat migrasi `20261123010000`) |
 | `snap_token`, `redirect_url` | text | null |
 | `payment_type`, `transaction_id`, `transaction_status`, `fraud_status` | text | null (dari notifikasi terakhir) |
 | `paid_at` | timestamptz | null |
@@ -618,6 +618,8 @@ begin
 end $$;
 -- Diubah oleh migrasi 20261123000000_late_settlement_refund.sql (review PR #1): `where ... status in ('pending', 'expired')`
 -- agar settlement terlambat tetap mengaktifkan Premium, dan order pending lain untuk undangan itu ditutup (`expired`).
+-- Migrasi `20261123010000_duplicate_payment_guard.sql`: status order baru `duplicate`; `mark_order_paid` mengunci baris undangan dan,
+-- bila undangan sudah punya order `paid` lain, menandai settlement berikutnya `duplicate` (undangan tidak diubah, perlu refund manual).
 -- Fungsi baru di migrasi yang sama: `refund_order(p_midtrans_order_id, p_transaction_status, p_free_days)` (service_role):
 -- order `paid` -> `refunded` dan `invitations.plan` -> `free` dengan `expires_at = least(expires_at, now + p_free_days)`, atomik.
 
