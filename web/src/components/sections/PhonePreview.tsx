@@ -19,11 +19,21 @@ export function PhonePreview({ src, title, className = "" }: { src: string; titl
   return (
     <div ref={box} className={`relative w-full ${className}`} style={{ aspectRatio: `${W} / ${H}` }}>
       <div className="absolute left-0 top-0 origin-top-left" style={{ width: W, height: H, transform: `scale(${scale})` }}>
-        <div className="relative h-full w-full rounded-[58px] bg-[#111113] p-[9px] shadow-[0_40px_60px_-24px_rgba(0,0,0,.5)] ring-1 ring-white/10">
+        <div className="relative h-full w-full rounded-[58px] bg-[#111113] p-[9px] ring-1 ring-white/10">
           <iframe
             title={title}
             src={src}
             loading="lazy"
+            onLoad={(e) => {
+              // Undangan sama-origin: sembunyikan scrollbar (tetap bisa di-scroll) agar tampil seperti layar ponsel.
+              try {
+                const d = e.currentTarget.contentDocument;
+                if (!d) return;
+                const st = d.createElement("style");
+                st.textContent = "html{scrollbar-width:none}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}";
+                d.head.appendChild(st);
+              } catch { /* lintas-origin: biarkan */ }
+            }}
             sandbox="allow-scripts allow-same-origin allow-popups"
             className="h-full w-full rounded-[50px] bg-white"
             style={{ border: 0 }}

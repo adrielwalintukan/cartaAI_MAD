@@ -36,9 +36,10 @@ export function Nav() {
           Carta<span className="serif-accent text-[17px]">AI</span><sup className="ml-0.5 text-[9px]">®</sup>
         </Link>
         <nav aria-label="Utama" className="hidden gap-7 text-[14px] md:flex">
-          {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className={`link-draw ${pathname.startsWith(n.href) ? "bg-[length:100%_1px]" : ""}`} aria-current={pathname.startsWith(n.href) ? "page" : undefined}>{n.label}</Link>
-          ))}
+          {[{ href: "/", label: "Beranda" }, ...NAV].map((n) => {
+            const on = n.href === "/" ? pathname === "/" : pathname.startsWith(n.href);
+            return <Link key={n.href} href={n.href} className={`link-draw ${on ? "bg-[length:100%_1px]" : ""}`} aria-current={on ? "page" : undefined}>{n.label}</Link>;
+          })}
         </nav>
         <div className="hidden items-center gap-6 text-[14px] md:flex">
           <a href={appLink("/masuk")} className="link-draw">Masuk</a>

@@ -47,7 +47,7 @@ function Envelope({ progress, style, onUserScroll }: { progress: RefObject<HeroP
   // Desktop (>= 1024px): kanvas hanya di separuh kanan, amplop di tengahnya.
   // Tablet/ponsel: amplop kecil di celah antara judul dan paragraf (maks. ~25% tinggi layar).
   const wide = typeof window !== "undefined" && window.innerWidth >= 1024;
-  const scale = wide ? Math.min(0.74, viewport.width / 3.2, viewport.height / 5.2) : Math.min(viewport.width / 5, (viewport.height * 0.25) / H);
+  const scale = wide ? Math.min(0.84, viewport.width / 3.2, viewport.height / 4.7) : Math.min(viewport.width / 5, (viewport.height * 0.25) / H);
   const baseY = wide ? -0.1 : viewport.height * 0.01;
 
   useFrame((_, dt) => {
@@ -72,11 +72,16 @@ function Envelope({ progress, style, onUserScroll }: { progress: RefObject<HeroP
     //    (ponsel/tablet: kartu naik keluar layar agar teks tetap bersih).
     const fall = smooth(0, 0.55, o);
     env.current.position.y = damp(env.current.position.y, -fall * 9, 8, dt);
-    const cardY = -0.16 + rise * 2.76 - (wide ? fall * 1.2 : -fall * 6);
+    const cardY = -0.16 + rise * 2.3 - (wide ? fall * 1.2 : -fall * 6);
     card.current.position.y = damp(card.current.position.y, cardY, 8, dt);
     card.current.position.z = 0.03 + rise * 0.05;
     card.current.rotation.y = damp(card.current.rotation.y, wide ? fall * -0.22 : 0, 6, dt);
-    card.current.scale.setScalar(pulse.current * (1 + fall * 0.12));
+    // Di section berikutnya (desktop) kartu melebar dan memanjang seperti layar ponsel; isi yang tampil ikut menyesuaikan.
+    const sx = 1 + fall * (wide ? 0.3 : 0.12), sy = 1 + fall * (wide ? 0.62 : 0.12);
+    card.current.scale.set(pulse.current * sx, pulse.current * sy, 1);
+    const cur = Math.max(0, shown.current) % textures.length;
+    windowFrac[cur] = Math.min(1, ((CH * sy) / (CW * sx)) * (textures[cur].image.width / textures[cur].image.height));
+    textures[cur].repeat.set(1, windowFrac[cur]);
 
     // Scroll isi kartu (damped) dan posisi kartu di layar (untuk uji kursor pada roda mouse).
     scrollNow.current = damp(scrollNow.current, scrollTarget.current, 10, dt);
@@ -95,7 +100,7 @@ function Envelope({ progress, style, onUserScroll }: { progress: RefObject<HeroP
     // Hampir tegak; hanya condong halus mengikuti kursor.
     group.current.rotation.y = damp(group.current.rotation.y, -0.08 + pointer.x * 0.14, 4, dt);
     group.current.rotation.x = damp(group.current.rotation.x, 0.03 - pointer.y * 0.08, 4, dt);
-    group.current.position.y = damp(group.current.position.y, baseY - rise * 1.2 * scale, 6, dt);
+    group.current.position.y = damp(group.current.position.y, baseY - rise * 0.9 * scale, 6, dt);
   });
 
   // Roda mouse di atas kartu menggulir isi undangan (seperti aslinya); di ujung, scroll diteruskan ke halaman.
