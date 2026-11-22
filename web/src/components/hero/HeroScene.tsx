@@ -1,10 +1,11 @@
 "use client";
 import { Float, RoundedBox, useTexture } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useMemo, useRef, type RefObject } from "react";
+import { useEffect, useMemo, useRef, type RefObject } from "react";
 import * as THREE from "three";
 
-export const CARD_TEXTURES = ["/templates/card-elegan_1.webp", "/templates/card-formal_1.webp", "/templates/card-simple_2.webp", "/templates/card-elegan_3.webp"];
+// Gambar halaman undangan penuh (tinggi); kartu hanya menampilkan satu jendela yang bisa digeser dengan scroll.
+export const CARD_TEXTURES = ["/templates/tall-elegan_1.webp", "/templates/tall-formal_1.webp", "/templates/tall-simple_2.webp", "/templates/tall-elegan_3.webp"];
 
 export type HeroProgress = { open: number; out: number };
 
@@ -30,13 +31,19 @@ function Envelope({ progress, style }: { progress: RefObject<HeroProgress>; styl
   const flap = useRef<THREE.Group>(null!);
   const card = useRef<THREE.Mesh>(null!);
   const textures = useTexture(CARD_TEXTURES);
-  textures.forEach((t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; });
+  // Jendela kartu = bagian atas gambar setinggi rasio kartu; sisanya terlihat saat di-scroll.
+  const windowFrac = textures.map((t) => Math.min(1, ((CH / CW) * t.image.width) / t.image.height));
+  textures.forEach((t, i) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.repeat.set(1, windowFrac[i]); });
   const cardMat = useRef<THREE.MeshStandardMaterial>(null!);
   const shown = useRef(-1);
   const pulse = useRef(1);
   const pocket = useMemo(() => new THREE.ShapeGeometry(pocketShape()), []);
   const flapGeo = useMemo(() => new THREE.ShapeGeometry(flapShape()), []);
-  const { pointer, viewport } = useThree();
+  const { pointer, viewport, camera, gl } = useThree();
+  const scrollTarget = useRef(0); // 0..1 posisi scroll isi kartu
+  const scrollNow = useRef(0);
+  const rect = useRef<{ l: number; t: number; r: number; b: number } | null>(null);
+  const corner = useMemo(() => new THREE.Vector3(), []);
   // Desktop (>= 1024px): kanvas hanya di separuh kanan, amplop di tengahnya.
   // Tablet/ponsel: amplop kecil di celah antara judul dan paragraf (maks. ~25% tinggi layar).
   const wide = typeof window !== "undefined" && window.innerWidth >= 1024;
@@ -48,6 +55,8 @@ function Envelope({ progress, style }: { progress: RefObject<HeroProgress>; styl
     // Ganti tekstur kartu saat gaya berganti (dengan denyut kecil).
     if (shown.current !== style.current) {
       shown.current = style.current ?? 0;
+      scrollTarget.current = 0;
+      scrollNow.current = 0;
       cardMat.current.map = textures[shown.current % textures.length];
       cardMat.current.needsUpdate = true;
       pulse.current = 0.96;
@@ -69,11 +78,45 @@ function Envelope({ progress, style }: { progress: RefObject<HeroProgress>; styl
     card.current.rotation.y = damp(card.current.rotation.y, wide ? fall * -0.22 : 0, 6, dt);
     card.current.scale.setScalar(pulse.current * (1 + fall * 0.12));
 
+    // Scroll isi kartu (damped) dan posisi kartu di layar (untuk uji kursor pada roda mouse).
+    scrollNow.current = damp(scrollNow.current, scrollTarget.current, 10, dt);
+    const idx = Math.max(0, shown.current) % textures.length;
+    textures[idx].offset.y = (1 - windowFrac[idx]) * (1 - scrollNow.current);
+    const cv = gl.domElement.getBoundingClientRect();
+    let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
+    card.current.updateWorldMatrix(true, false);
+    for (const [x, y] of [[-CW / 2, -CH / 2], [CW / 2, -CH / 2], [CW / 2, CH / 2], [-CW / 2, CH / 2]]) {
+      card.current.localToWorld(corner.set(x, y, 0)).project(camera);
+      const px = cv.left + (corner.x * 0.5 + 0.5) * cv.width, py = cv.top + (1 - (corner.y * 0.5 + 0.5)) * cv.height;
+      l = Math.min(l, px); r = Math.max(r, px); t = Math.min(t, py); b = Math.max(b, py);
+    }
+    rect.current = { l, t, r, b };
+
     // Hampir tegak; hanya condong halus mengikuti kursor.
     group.current.rotation.y = damp(group.current.rotation.y, -0.08 + pointer.x * 0.14, 4, dt);
     group.current.rotation.x = damp(group.current.rotation.x, 0.03 - pointer.y * 0.08, 4, dt);
     group.current.position.y = damp(group.current.position.y, baseY - rise * 1.2 * scale, 6, dt);
   });
+
+  // Roda mouse di atas kartu menggulir isi undangan (seperti aslinya); di ujung, scroll diteruskan ke halaman.
+  useEffect(() => {
+    const onWheel = (e: WheelEvent) => {
+      const rc = rect.current;
+      if (!rc || (progress.current?.open ?? 0) < 0.9) return;
+      if (e.clientX < rc.l || e.clientX > rc.r || e.clientY < rc.t || e.clientY > rc.b) return;
+      const tex = textures[Math.max(0, shown.current) % textures.length];
+      const range = (rc.r - rc.l) * (tex.image.height / tex.image.width) - (rc.b - rc.t);
+      if (range <= 0) return;
+      const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+      const next = THREE.MathUtils.clamp(scrollTarget.current + dy / range, 0, 1);
+      if (next === scrollTarget.current) return;
+      e.preventDefault();
+      e.stopPropagation();
+      scrollTarget.current = next;
+    };
+    window.addEventListener("wheel", onWheel, { passive: false, capture: true });
+    return () => window.removeEventListener("wheel", onWheel, { capture: true });
+  }, [progress, textures]);
 
   const paper = "#e8dccb", paperBack = "#d9c9b3", liner = "#a8482a";
   return (

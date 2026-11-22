@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MagneticButton } from "@/components/motion/Magnetic";
 import { ClipReveal, FadeUp, SplitReveal } from "@/components/motion/Reveal";
-import { appLink, TEMPLATES } from "@/lib/site";
+import { PhonePreview } from "@/components/sections/PhonePreview";
+import { appLink, previewSrc, TEMPLATES } from "@/lib/site";
 
 export const dynamicParams = false;
 export function generateStaticParams() { return TEMPLATES.map((t) => ({ slug: t.slug })); }
@@ -36,10 +37,12 @@ export default async function TemplateDetail({ params }: { params: Promise<{ slu
             </div>
           </FadeUp>
         </div>
-        <ClipReveal className="mx-auto w-[min(78vw,380px)] overflow-hidden md:ml-auto md:mr-[6vw]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={t.image} alt={`Contoh undangan bergaya ${t.name}`} className="clip-inner w-full drop-shadow-2xl" />
-        </ClipReveal>
+        <div className="mx-auto w-[min(78vw,380px)] md:ml-auto md:mr-[6vw]">
+          <ClipReveal className="overflow-visible">
+            <PhonePreview className="clip-inner" src={previewSrc(t)} title={`Contoh undangan bergaya ${t.name}`} />
+          </ClipReveal>
+          <p className="meta mt-6 text-center opacity-60">Scroll di dalam ponsel untuk melihat seluruh undangan</p>
+        </div>
       </section>
 
       <section className="wrap grid gap-10 py-[clamp(80px,12vw,160px)] md:grid-cols-3">

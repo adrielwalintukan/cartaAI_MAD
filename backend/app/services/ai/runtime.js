@@ -181,7 +181,7 @@
     var x0 = Math.floor(fx - W / 2 / T), x1 = Math.floor(fx + W / 2 / T), y0 = Math.floor(fy - H / 2 / T), y1 = Math.floor(fy + H / 2 / T);
     for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) {
       if (y < 0 || y >= n) continue;
-      var im = el("img", null, { src: "https://tile.openstreetmap.org/" + z + "/" + (((x % n) + n) % n) + "/" + y + ".png", alt: "", width: T, height: T, decoding: "async" });
+      var im = el("img", null, { src: "https://tile.openstreetmap.org/" + z + "/" + (((x % n) + n) % n) + "/" + y + ".png", alt: "", width: T, height: T, decoding: "async", loading: "lazy" });
       im.style.left = Math.round(W / 2 + (x - fx) * T) + "px"; im.style.top = Math.round(H / 2 + (y - fy) * T) + "px";
       im.style.width = im.style.height = T + "px";
       w.appendChild(im);
@@ -222,7 +222,8 @@
   var opens = all("open");
   var cover = opens.length && opens[0].closest("section,header");
   if (cover && (cover === document.body || cover.querySelector('[data-carta="rsvp"],[data-carta="countdown"]'))) cover = null;
-  if (cover && !location.hash) {
+  // ?preview=1: pratinjau di situs pemasaran, tanpa kunci scroll sampul.
+  if (cover && !location.hash && !q.has("preview")) {
     var r = opens[0].getBoundingClientRect(), cs = getComputedStyle(opens[0]);
     if (r.width && r.height && r.top >= 0 && r.bottom <= innerHeight && cs.visibility !== "hidden" && cs.opacity !== "0") {
       root.classList.add("carta-locked");

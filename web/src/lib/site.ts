@@ -21,6 +21,9 @@ export type Template = {
   palette: string; // warna latar saat template ini disorot
 };
 
+/** Alamat pratinjau interaktif (undangan statis di public/preview) untuk sebuah template; bisa di-scroll di dalam ponsel. */
+export const previewSrc = (t: { image: string }) => `/preview/${t.image.split("/").pop()!.replace(".webp", "")}.html?preview=1&to=Bapak%20%26%20Ibu`;
+
 /** Sembilan template dari versi lama (mobile/src/screens/TemplateScreen.tsx di main), kini sebagai arahan gaya untuk AI. */
 export const TEMPLATES: Template[] = [
   { slug: "elegan-tradisional", name: "Elegan Tradisional", style: "Elegan", preset: "elegan", description: "Nuansa mewah dengan motif etnik dan warna keemasan.", image: "/templates/elegan_1.webp", palette: "#e9dfc6" },
