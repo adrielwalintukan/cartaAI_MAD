@@ -111,9 +111,11 @@ function Envelope({ progress, style, onUserScroll }: { progress: RefObject<HeroP
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
       const rc = rect.current;
-      // Hanya desktop (di ponsel kartu hampir selebar layar, jadi scroll halaman akan terjebak) dan hanya saat kartu sudah terbuka penuh.
-      if (!wide || !rc || (progress.current?.open ?? 0) < 0.98) return;
-      if (e.clientX < rc.l || e.clientX > rc.r || e.clientY < rc.t || e.clientY > rc.b) return;
+      // Hanya saat kartu sudah terbuka penuh dan kursor di bagian tengah kartu; tepi kartu dan area luar tetap menggulir halaman
+      // (di layar sempit kartu hampir selebar layar, jadi tepi yang disisakan lebih lebar).
+      if (!rc || (progress.current?.open ?? 0) < 0.98) return;
+      const mx = (rc.r - rc.l) * (wide ? 0.04 : 0.14), my = (rc.b - rc.t) * (wide ? 0.04 : 0.1);
+      if (e.clientX < rc.l + mx || e.clientX > rc.r - mx || e.clientY < rc.t + my || e.clientY > rc.b - my) return;
       const tex = textures[Math.max(0, shown.current) % textures.length];
       const range = (rc.r - rc.l) * (tex.image.height / tex.image.width) - (rc.b - rc.t);
       if (range <= 0) return;
