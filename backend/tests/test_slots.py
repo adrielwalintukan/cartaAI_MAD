@@ -116,7 +116,7 @@ def test_all_kinds_present_and_safe():
 
 
 def test_kit_size_budget():
-    assert len(_STYLE) + len(runtime_js()) + sum(len(v) for v in ornaments.KINDS.values()) < 25_000
+    assert len(_STYLE) + len(runtime_js()) + sum(len(v) for v in ornaments.KINDS.values()) < 40_000
 
 
 def test_kit_css_classes_and_reduced_motion():

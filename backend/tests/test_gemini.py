@@ -63,8 +63,9 @@ def test_generate_design_order(monkeypatch, settings):
     with pytest.raises(gemini.GeminiError) as e:
         gemini.generate_design(settings, "s", "u")
     assert e.value.code == "ai_rate_limited"
-    assert calls[:4] == [("gemini-3.5-flash", "gem-main-key"), ("gemini-3.5-flash", "gem-fallback-key"),
-                         ("gemini-3.1-flash-lite", "gem-main-key"), ("gemini-3.1-flash-lite", "gem-fallback-key")]
+    d = [("gemini-3.5-flash", "gem-main-key"), ("gemini-3.5-flash", "gem-fallback-key")]
+    # model desain dicoba tuntas (dua putaran, dua key) sebelum cadangan
+    assert calls[:4] == d + d and calls[4][0] == "gemini-3.1-flash-lite"
 
 
 def test_generate_design_model_missing_falls_back(monkeypatch, settings):
@@ -98,7 +99,21 @@ def test_generate_design_other_errors_fall_back(monkeypatch, settings):
 
     monkeypatch.setattr(gemini, "_call_model", fake)
     assert gemini.generate_design(settings, "s", "u") == ("<html/>", "gemini-3.1-flash-lite")
-    assert calls == ["gemini-3.5-flash", "gemini-3.1-flash-lite"]
+    assert calls == ["gemini-3.5-flash"] * 3 + ["gemini-3.1-flash-lite"]  # galat sesaat dicoba ulang dulu
+
+
+def test_design_model_recovers_after_transient_server_error(monkeypatch, settings):
+    calls = []
+
+    def fake(key, s, model, *a):
+        calls.append(model)
+        if len(calls) == 1:
+            raise Err(500)
+        return "<html/>"
+
+    monkeypatch.setattr(gemini, "_call_model", fake)
+    assert gemini.generate_design(settings, "s", "u") == ("<html/>", "gemini-3.5-flash")
+    assert calls == ["gemini-3.5-flash"] * 2
 
 
 def test_chat_still_raises_unavailable_immediately(monkeypatch, settings):

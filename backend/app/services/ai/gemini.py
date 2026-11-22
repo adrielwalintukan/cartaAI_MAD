@@ -8,6 +8,8 @@ from google.genai import types
 from app.config import Settings
 
 log = logging.getLogger(__name__)
+BACKOFF_SECONDS = 6  # jeda antar-putaran saat model sibuk (429/503)
+RETRY_UNAVAILABLE = 2  # percobaan ulang model non-terakhir pada galat server/timeout
 
 
 class GeminiError(Exception):
@@ -39,32 +41,44 @@ def _call_model(api_key: str, s: Settings, model: str, system: str, contents, te
 
 def _run(s: Settings, models: list[str], system: str, contents, temperature: float,
          max_tokens: int | None, heartbeat) -> tuple[str, str]:
-    """Coba setiap model berurutan, tiap model di key utama lalu cadangan; dua putaran untuk 429 sesaat."""
+    """Tiap model dicoba tuntas (key utama lalu cadangan, dua putaran) sebelum turun ke model berikutnya.
+
+    Lonjakan permintaan (503) bersifat sesaat; model cadangan jauh lebih lemah untuk desain, jadi jangan buru-buru.
+    """
     keys = [k for k in (s.gemini_api_key, s.gemini_api_key_fallback) if k]
     max_tokens = max_tokens or s.gemini_max_output_tokens
     last = "ai_unavailable"
     missing: set[str] = set()
-    for round_no in range(2):
-        for model in models:
+    for model in models:
+        for round_no in range(2):
+            if model in missing:
+                break
             for i, key in enumerate(keys):
+                tries = 0
+                while True:
+                    if heartbeat:
+                        heartbeat()
+                    try:
+                        return _call_model(key, s, model, system, contents, temperature, max_tokens), model
+                    except Exception as exc:  # SDK melempar banyak jenis; semuanya dipetakan
+                        kind = classify(exc)
+                        log.warning("gemini gagal model=%s key_index=%d kind=%s type=%s", model, i, kind,
+                                    type(exc).__name__)
+                        if kind == "ai_unavailable" and model == models[-1]:
+                            raise GeminiError("ai_unavailable", "Layanan AI tidak dapat dihubungi.") from None
+                        if kind == "ai_unavailable" and tries < RETRY_UNAVAILABLE:
+                            tries += 1  # galat sesaat/timeout: coba lagi model yang sama
+                            time.sleep(4)
+                            continue
+                        if kind in ("ai_unavailable", "ai_model_missing"):
+                            missing.add(model)  # model tak tersedia: langsung ke model berikutnya
+                        else:
+                            last = kind
+                        break
                 if model in missing:
                     break
-                if heartbeat:
-                    heartbeat()
-                try:
-                    return _call_model(key, s, model, system, contents, temperature, max_tokens), model
-                except Exception as exc:  # SDK melempar banyak jenis; semuanya dipetakan
-                    kind = classify(exc)
-                    log.warning("gemini gagal model=%s key_index=%d kind=%s type=%s", model, i, kind,
-                                type(exc).__name__)
-                    if kind == "ai_unavailable" and model == models[-1]:
-                        raise GeminiError("ai_unavailable", "Layanan AI tidak dapat dihubungi.") from None
-                    if kind in ("ai_unavailable", "ai_model_missing"):
-                        missing.add(model)  # model tak tersedia: langsung ke model berikutnya
-                    else:
-                        last = kind
-        if round_no == 0 and len(missing) < len(models):
-            time.sleep(3)
+            if round_no == 0 and model not in missing:
+                time.sleep(BACKOFF_SECONDS)
     if len(missing) == len(models):
         raise GeminiError("ai_unavailable", "Layanan AI tidak dapat dihubungi.")
     raise GeminiError(last, "Layanan AI sedang ramai, coba lagi sebentar.")
