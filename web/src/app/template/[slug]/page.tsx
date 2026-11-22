@@ -37,7 +37,7 @@ export default async function TemplateDetail({ params }: { params: Promise<{ slu
             </div>
           </FadeUp>
         </div>
-        <div className="mx-auto w-[min(78vw,380px)] md:ml-auto md:mr-[6vw]">
+        <div className="mx-auto w-[min(66vw,330px)] md:ml-auto md:mr-[6vw]">
           <ClipReveal className="overflow-visible">
             <PhonePreview className="clip-inner" src={previewSrc(t)} title={`Contoh undangan bergaya ${t.name}`} />
           </ClipReveal>
