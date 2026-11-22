@@ -74,7 +74,8 @@ function Envelope({ progress, style, onUserScroll }: { progress: RefObject<HeroP
     // Ponsel/tablet: setelah kartu keluar dan membesar, amplop menyingkir ke bawah agar kartu mengisi layar.
     const dropEnv = wide ? 0 : smooth(0.6, 1, p);
     env.current.position.y = damp(env.current.position.y, -(fall + dropEnv) * 9, 8, dt);
-    const cardY = wide ? -0.16 + rise * 2.3 - fall * 1.2 : -0.16 + rise * 1.36 + fall * 8.5;
+    // Ponsel: kartu tetap di tempat; section teks naik menutupinya seperti lembar kertas (tanpa ruang kosong).
+    const cardY = wide ? -0.16 + rise * 2.3 - fall * 1.2 : -0.16 + rise * 1.36;
     card.current.position.y = damp(card.current.position.y, cardY, 8, dt);
     card.current.position.z = 0.03 + rise * 0.05;
     card.current.rotation.y = damp(card.current.rotation.y, wide ? fall * -0.22 : 0, 6, dt);
