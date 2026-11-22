@@ -116,6 +116,12 @@ function Envelope({ progress, style, onUserScroll }: { progress: RefObject<HeroP
       if (!rc || (progress.current?.open ?? 0) < 0.98) return;
       const mx = (rc.r - rc.l) * (wide ? 0.04 : 0.14), my = (rc.b - rc.t) * (wide ? 0.04 : 0.1);
       if (e.clientX < rc.l + mx || e.clientX > rc.r - mx || e.clientY < rc.t + my || e.clientY > rc.b - my) return;
+      // Bagian kartu yang tertutup lembar teks (section ber-latar di atasnya) tidak boleh ikut tergulir: scroll di sana menggerakkan halaman.
+      const cover = document.elementFromPoint(e.clientX, e.clientY)?.closest("[data-covers-card]");
+      if (cover) {
+        const bg = getComputedStyle(cover).backgroundColor;
+        if (bg !== "rgba(0, 0, 0, 0)" && bg !== "transparent") return;
+      }
       const tex = textures[Math.max(0, shown.current) % textures.length];
       const range = (rc.r - rc.l) * (tex.image.height / tex.image.width) - (rc.b - rc.t);
       if (range <= 0) return;
