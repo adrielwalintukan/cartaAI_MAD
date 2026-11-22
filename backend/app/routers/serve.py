@@ -10,6 +10,7 @@ from app.repos import assets as assets_repo
 from app.repos import invitations as inv_repo
 from app.repos import versions as versions_repo
 from app.repos.common import now, parse_ts
+from app.services import geocode
 from app.services.ai import slots
 from app.services.ai.sanitize import SanitizeCtx
 from app.services.invitations import asset_url
@@ -50,12 +51,16 @@ def serve_invitation(slug: str, db=Depends(get_db), s: Settings = Depends(get_se
     gallery = [photo(a) for a in ready if a["kind"] == "gallery"] if premium else []
     portraits = {a["kind"]: photo(a) for a in ready if a["kind"] in ("groom", "bride")} if premium else {}
     gifts = (data.get("gifts") or []) if premium else []
+    places = {}
+    for q in {(data.get(k) or {}).get("location") for k in ("ceremony", "reception")} - {None, ""}:
+        if (ll := geocode.locate(q)):
+            places[q] = ll
     ctx = slots.PublicCtx(
         slug=slug, plan=inv["plan"], api_base=s.public_api_base_url,
         event_at=slots.event_iso(data.get("event_date"), (data.get("ceremony") or {}).get("time"),
                                  data.get("timezone", "WIB")),
         music_url=asset_url(s, music["storage_path"]) if (music and premium) else None, gifts=gifts,
-        gallery=gallery, portraits=portraits)
+        gallery=gallery, portraits=portraits, places=places)
     nonce = slots.new_nonce()
     page = slots.render_public(ver["html"], ctx, SanitizeCtx(inv["id"], s.storage_public_prefix), nonce)
     cache = "public, s-maxage=300, stale-while-revalidate=86400"

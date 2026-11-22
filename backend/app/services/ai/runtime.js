@@ -11,7 +11,26 @@
     return e;
   }
   function clear(n) { while (n.firstChild) n.removeChild(n.firstChild); }
-  function box(slot) { clear(slot); var b = el("div"); b.className = "carta-box"; slot.appendChild(b); return b; }
+  // Warna teks mengikuti latar di belakang kotak sistem (hitung mundur, RSVP): terang di latar gelap, gelap di latar terang.
+  function parseColor(c) {
+    var m = c && c.match(/(?:rgba?|color\(srgb)\s*\(?\s*([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)(?:\s*[,/]\s*([\d.]+))?/);
+    if (!m) return null;
+    var k = m[0].indexOf("color") === 0 ? 255 : 1;
+    return [m[1] * k, m[2] * k, m[3] * k, m[4] == null ? 1 : +m[4]];
+  }
+  function bgLum(n) {
+    for (; n && n.nodeType === 1; n = n.parentElement) {
+      var st = getComputedStyle(n), p = parseColor(st.backgroundColor);
+      if (!p || p[3] < 0.6) p = st.backgroundImage.indexOf("gradient") > -1 ? parseColor(st.backgroundImage) : null;
+      if (p && p[3] >= 0.6) return (0.2126 * p[0] + 0.7152 * p[1] + 0.0722 * p[2]) / 255;
+    }
+    return 1;
+  }
+  function box(slot) {
+    clear(slot); var b = el("div"); b.className = "carta-box"; slot.appendChild(b);
+    b.classList.add(bgLum(slot) < 0.5 ? "carta-on-dark" : "carta-on-light");
+    return b;
+  }
 
   // guest-name
   if (to) all("guest-name").forEach(function (n) { n.textContent = to; });
@@ -152,13 +171,36 @@
     slot.appendChild(el("img", null, { src: u, alt: slot.getAttribute("data-who") === "bride" ? "Foto mempelai wanita" : "Foto mempelai pria", decoding: "async" }));
   });
 
-  // peta: embed Google Maps sebelum tiap tombol "Buka di Google Maps"
+  // peta: gambar ubin OpenStreetMap di titik lokasi (tanpa iframe, tampil benar di semua perangkat);
+  // tanpa koordinat: embed Google Maps sebagai cadangan
+  function tileMap(w, ll) {
+    var dpr = window.devicePixelRatio || 1, hi = dpr >= 1.5, z = hi ? 17 : 16, T = hi ? 128 : 256, n = Math.pow(2, z);
+    var W = w.clientWidth || 320, H = 190, la = ll[0] * Math.PI / 180;
+    var fx = (ll[1] + 180) / 360 * n, fy = (1 - Math.log(Math.tan(la) + 1 / Math.cos(la)) / Math.PI) / 2 * n;
+    w.className += " carta-map-static";
+    var x0 = Math.floor(fx - W / 2 / T), x1 = Math.floor(fx + W / 2 / T), y0 = Math.floor(fy - H / 2 / T), y1 = Math.floor(fy + H / 2 / T);
+    for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) {
+      if (y < 0 || y >= n) continue;
+      var im = el("img", null, { src: "https://tile.openstreetmap.org/" + z + "/" + (((x % n) + n) % n) + "/" + y + ".png", alt: "", width: T, height: T, decoding: "async" });
+      im.style.left = Math.round(W / 2 + (x - fx) * T) + "px"; im.style.top = Math.round(H / 2 + (y - fy) * T) + "px";
+      im.style.width = im.style.height = T + "px";
+      w.appendChild(im);
+    }
+    var pin = el("div"); pin.className = "carta-map-pin";
+    pin.innerHTML = '<svg viewBox="0 0 34 44" width="34" height="44"><path d="M17 0C7.6 0 0 7.5 0 16.8 0 29 17 44 17 44s17-15 17-27.2C34 7.5 26.400 0 17 0z" fill="currentColor"/><circle cx="17" cy="16.500" r="6.500" fill="#fff"/></svg>';
+    w.appendChild(pin);
+    var cr = el("div"); cr.className = "carta-map-credit";
+    cr.appendChild(el("a", "© OpenStreetMap", { href: "https://www.openstreetmap.org/copyright", target: "_blank", rel: "noopener noreferrer" }));
+    w.appendChild(cr);
+  }
   Array.prototype.slice.call(document.querySelectorAll('a[href^="https://www.google.com/maps/search/"]')).forEach(function (a) {
     var qs; try { qs = new URL(a.href).searchParams.get("query"); } catch (e) { return; }
     if (!qs) return;
     var w = el("div"); w.className = "carta-map carta-reveal";
-    w.appendChild(el("iframe", null, { src: "https://www.google.com/maps?q=" + encodeURIComponent(qs) + "&output=embed", title: "Peta " + qs, loading: "lazy", referrerpolicy: "no-referrer" }));
     a.parentNode.insertBefore(w, a);
+    var ll = (C.places || {})[qs];
+    if (ll) tileMap(w, ll);
+    else w.appendChild(el("iframe", null, { src: "https://www.google.com/maps?q=" + encodeURIComponent(qs) + "&output=embed", title: "Peta " + qs, loading: "lazy", referrerpolicy: "no-referrer" }));
   });
 
   // reveal saat scroll (kit desain); tanpa IntersectionObserver langsung tampil

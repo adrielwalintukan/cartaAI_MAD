@@ -88,6 +88,7 @@ class PublicCtx:
     gifts: list[dict] = field(default_factory=list)
     gallery: list[str] = field(default_factory=list)
     portraits: dict = field(default_factory=dict)  # {"groom": url, "bride": url}
+    places: dict = field(default_factory=dict)  # {nama lokasi: [lat, lon]} untuk peta statis
 
 
 def event_iso(event_date: str | None, time_hhmm: str | None, tz: str) -> str | None:
@@ -155,12 +156,22 @@ _STYLE = (
     "transition:transform .45s cubic-bezier(.23,1,.32,1),box-shadow .45s cubic-bezier(.23,1,.32,1)}"
     ".carta-btn:hover{transform:translateY(-3px);box-shadow:0 20px 34px -12px color-mix(in srgb,var(--carta-accent,#8a5a44) 70%,#000)}"
     ".carta-btn-ghost{background:transparent;color:var(--carta-accent,#8a5a44);border-color:var(--carta-accent,#8a5a44);box-shadow:none}"
-    ".carta-section{position:relative;padding:4.5rem 1.25rem}"
+    ".carta-section{position:relative;padding:5rem 1.25rem 5.5rem}"
+    "[data-carta=ornament][data-kind=wave],[data-carta=ornament][data-kind=batik-band]{margin-bottom:4rem}"
+    ".carta-box.carta-on-dark{color:#f7f3ea}.carta-box.carta-on-light{color:var(--carta-fg,#222)}"
+    ".carta-box.carta-on-dark input,.carta-box.carta-on-dark textarea,.carta-box.carta-on-dark select{border-color:rgba(255,255,255,.45)}"
+    ".carta-box.carta-on-dark .carta-wish{border-top-color:rgba(255,255,255,.3)}"
     ".carta-alt{background:color-mix(in srgb,var(--carta-accent,#8a5a44) 9%,var(--carta-bg,#fff))}"
     ".carta-dark{color:#f4ede1;background:linear-gradient(165deg,color-mix(in srgb,var(--carta-accent,#8a5a44) 38%,#10141a),#10141a)}"
     ".carta-map{margin:1rem 0;border-radius:1rem;overflow:hidden;border:1px solid color-mix(in srgb,var(--carta-accent,#8a5a44) 25%,transparent);"
     "box-shadow:0 10px 30px -14px rgba(0,0,0,.3);line-height:0}"
     ".carta-map iframe{width:100%;height:190px;border:0;display:block}"
+    ".carta-map-static{position:relative;height:190px;overflow:hidden;background:#e8e4da;line-height:0}"
+    ".carta-map-static img{position:absolute;display:block;max-width:none}"
+    ".carta-map-pin{position:absolute;left:50%;top:50%;width:34px;height:44px;margin:-44px 0 0 -17px;color:var(--carta-accent,#c0392b);"
+    "filter:drop-shadow(0 3px 4px rgba(0,0,0,.35))}"
+    ".carta-map-credit{position:absolute;right:0;bottom:0;padding:2px 6px;font:10px/1.4 sans-serif;background:rgba(255,255,255,.85);color:#333;border-radius:6px 0 0 0}"
+    ".carta-map-credit a{color:#0b57d0}"
     ".carta-gifts{display:grid;gap:1.25rem;justify-items:center;max-width:24rem;margin:0 auto}"
     ".carta-bank{width:100%;aspect-ratio:1.586;box-sizing:border-box;padding:1.25rem 1.4rem;border-radius:1.25rem;"
     "display:flex;flex-direction:column;justify-content:space-between;text-align:left;color:#fff;position:relative;overflow:hidden;"
@@ -211,7 +222,7 @@ def render_public(html: str, ctx: PublicCtx, sctx: SanitizeCtx, nonce: str) -> s
     ornaments.fill(soup)  # SVG sistem diisi setelah sanitasi
     clean = serialize(soup)
     config = {"slug": ctx.slug, "api": ctx.api_base.rstrip("/"), "eventAt": ctx.event_at, "plan": ctx.plan,
-              "musicUrl": ctx.music_url, "gifts": ctx.gifts, "gallery": ctx.gallery, "portraits": ctx.portraits}
+              "musicUrl": ctx.music_url, "gifts": ctx.gifts, "gallery": ctx.gallery, "portraits": ctx.portraits, "places": ctx.places}
     parts = [
         f'<style data-carta-style nonce="{nonce}">{_STYLE}</style>',
         f'<script nonce="{nonce}">window.__CARTA__={json_for_script(config)};</script>',
@@ -241,7 +252,7 @@ def build_csp(nonce: str | None, supabase_url: str, api_base: str, web_base: str
         f"script-src {script}",
         "style-src 'unsafe-inline' https://fonts.googleapis.com",
         "font-src https://fonts.gstatic.com",
-        f"img-src data: {sb}",
+        f"img-src data: {sb} https://tile.openstreetmap.org",
         f"media-src {sb}",
         f"connect-src {api_base.rstrip('/')}",
         "frame-src https://www.google.com", "object-src 'none'", "base-uri 'none'", "form-action 'none'",

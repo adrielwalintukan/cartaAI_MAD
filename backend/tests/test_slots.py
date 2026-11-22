@@ -149,3 +149,9 @@ def test_two_portrait_slots_are_kept():
     out, w = ensure_slots(doc('<div data-carta="portrait" data-who="groom"></div><div data-carta="portrait" data-who="bride"></div>'),
                           SlotCtx(False, False))
     assert count(out, "portrait") == 2 and "slot_portrait_duplicate_removed" not in w
+
+
+def test_csp_allows_osm_tiles_and_places_reach_config():
+    assert "https://tile.openstreetmap.org" in build_csp("N", "https://x.supabase.co", "https://api.x", "https://app.x")
+    ctx = PublicCtx(slug="s", plan="premium", event_at=None, api_base="https://api.x", places={"Klabat": [1.39, 125.06]})
+    assert '"places":{"Klabat":[1.39,125.06]}' in render_public(doc("<p>x</p>"), ctx, SCTX, "N")
