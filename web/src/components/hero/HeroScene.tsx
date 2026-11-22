@@ -25,7 +25,7 @@ function flapShape() {
   return s;
 }
 
-function Envelope({ progress, style }: { progress: RefObject<HeroProgress>; style: RefObject<number> }) {
+function Envelope({ progress, style, onUserScroll }: { progress: RefObject<HeroProgress>; style: RefObject<number>; onUserScroll?: () => void }) {
   const group = useRef<THREE.Group>(null!);
   const env = useRef<THREE.Group>(null!);
   const flap = useRef<THREE.Group>(null!);
@@ -113,10 +113,11 @@ function Envelope({ progress, style }: { progress: RefObject<HeroProgress>; styl
       e.preventDefault();
       e.stopPropagation();
       scrollTarget.current = next;
+      onUserScroll?.(); // pengguna membaca: hentikan pergantian gaya otomatis
     };
     window.addEventListener("wheel", onWheel, { passive: false, capture: true });
     return () => window.removeEventListener("wheel", onWheel, { capture: true });
-  }, [progress, textures]);
+  }, [progress, textures, onUserScroll]);
 
   const paper = "#e8dccb", paperBack = "#d9c9b3", liner = "#a8482a";
   return (
@@ -154,7 +155,7 @@ function Envelope({ progress, style }: { progress: RefObject<HeroProgress>; styl
   );
 }
 
-export default function HeroScene({ progress, style, eventSource, onFail }: { progress: RefObject<HeroProgress>; style: RefObject<number>; eventSource: RefObject<HTMLElement | null>; onFail: () => void }) {
+export default function HeroScene({ progress, style, eventSource, onFail, onUserScroll }: { progress: RefObject<HeroProgress>; style: RefObject<number>; eventSource: RefObject<HTMLElement | null>; onFail: () => void; onUserScroll?: () => void }) {
   return (
     <Canvas
       dpr={[1, 1.75]}
@@ -171,7 +172,7 @@ export default function HeroScene({ progress, style, eventSource, onFail }: { pr
       <directionalLight position={[3, 4, 5]} intensity={1.6} />
       <directionalLight position={[-4, -2, 2]} intensity={0.5} color="#f1c9b4" />
       <Float speed={1.4} rotationIntensity={0.06} floatIntensity={0.3}>
-        <Envelope progress={progress} style={style} />
+        <Envelope progress={progress} style={style} onUserScroll={onUserScroll} />
       </Float>
     </Canvas>
   );

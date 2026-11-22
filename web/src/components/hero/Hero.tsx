@@ -1,6 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { MagneticButton } from "@/components/motion/Magnetic";
 import { SplitReveal } from "@/components/motion/Reveal";
 import { gsap, onReady, prefersReducedMotion, ScrollTrigger, useGSAP } from "@/lib/gsap";
@@ -69,13 +69,14 @@ export function Hero({ children }: { children?: React.ReactNode }) {
   }, { scope: root });
 
   const pick = (i: number) => { setAuto(false); setStyle(i); };
+  const stopAuto = useCallback(() => setAuto(false), []);
 
   return (
     <div ref={root} className="relative">
       {/* Lapisan 3D menempel sepanjang hero + section berikutnya; tidak menangkap klik. */}
       <div aria-hidden className="pointer-events-none absolute inset-0 z-10">
         <div className="sticky top-0 h-svh lg:ml-[44%]">
-          {mode === "3d" ? <HeroScene progress={progress} style={styleRef} eventSource={root} onFail={() => setMode("static")} /> : null}
+          {mode === "3d" ? <HeroScene progress={progress} style={styleRef} eventSource={root} onFail={() => setMode("static")} onUserScroll={stopAuto} /> : null}
           {mode === "static" ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img key={style} src={CARDS[style]} alt="" className="absolute left-1/2 top-[58%] w-[min(40vw,280px)] -translate-x-1/2 -translate-y-1/2 rounded-md shadow-2xl lg:top-1/2" />
