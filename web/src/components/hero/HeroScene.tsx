@@ -111,7 +111,8 @@ function Envelope({ progress, style, onUserScroll }: { progress: RefObject<HeroP
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
       const rc = rect.current;
-      if (!rc || (progress.current?.open ?? 0) < 0.9) return;
+      // Hanya desktop (di ponsel kartu hampir selebar layar, jadi scroll halaman akan terjebak) dan hanya saat kartu sudah terbuka penuh.
+      if (!wide || !rc || (progress.current?.open ?? 0) < 0.98) return;
       if (e.clientX < rc.l || e.clientX > rc.r || e.clientY < rc.t || e.clientY > rc.b) return;
       const tex = textures[Math.max(0, shown.current) % textures.length];
       const range = (rc.r - rc.l) * (tex.image.height / tex.image.width) - (rc.b - rc.t);
@@ -126,7 +127,7 @@ function Envelope({ progress, style, onUserScroll }: { progress: RefObject<HeroP
     };
     window.addEventListener("wheel", onWheel, { passive: false, capture: true });
     return () => window.removeEventListener("wheel", onWheel, { capture: true });
-  }, [progress, textures, onUserScroll]);
+  }, [progress, textures, onUserScroll, wide]);
 
   const paper = "#e8dccb", paperBack = "#d9c9b3", liner = "#a8482a";
   return (
