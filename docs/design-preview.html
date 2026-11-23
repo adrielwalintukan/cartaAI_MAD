@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CartaAI · Pratinjau Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAF6EE;--surface:#FFFDF8;--raised:#FFFDF8;--sunken:#F2ECE0;
+  --text:#1F2A24;--muted:#5B645D;--subtle:#6B726C;
+  --border:#E4DCCB;--strong:#8A826F;
+  --accent:#A8482A;--accent-hover:#8F3B21;--on-accent:#FFFDF8;
+  --accent-soft:#F6E3D9;--on-accent-soft:#8F3B21;
+  --inverse:#2F4A3C;--on-inverse:#FAF6EE;
+  --success:#3F6B4A;--warning:#8A5C0E;--danger:#B3382C;--info:#35607A;
+  --success-soft:#E6F0E6;--warning-soft:#F7ECD3;--danger-soft:#F8E1DD;--info-soft:#DFEAF1;
+  --shadow:0 12px 32px rgba(31,42,36,.16);
+  --display:'Fraunces',Georgia,serif;--sans:'Inter',system-ui,sans-serif;
+}
+:root[data-theme="dark"]{
+  --bg:#141A16;--surface:#1C241F;--raised:#252F29;--sunken:#101511;
+  --text:#F3EEE2;--muted:#A9B1A9;--subtle:#8D968E;
+  --border:#34403A;--strong:#6B7870;
+  --accent:#E08A66;--accent-hover:#E9A585;--on-accent:#1A0F0A;
+  --accent-soft:#3A2A22;--on-accent-soft:#E9A585;
+  --inverse:#F3EEE2;--on-inverse:#1F2A24;
+  --success:#7DB68A;--warning:#D9A441;--danger:#E5877C;--info:#7FB0CC;
+  --success-soft:#1F3326;--warning-soft:#3A2F14;--danger-soft:#3D1F1B;--info-soft:#1A2C38;
+  --shadow:0 12px 32px rgba(0,0,0,.55);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#141A16;--surface:#1C241F;--raised:#252F29;--sunken:#101511;
+    --text:#F3EEE2;--muted:#A9B1A9;--subtle:#8D968E;
+    --border:#34403A;--strong:#6B7870;
+    --accent:#E08A66;--accent-hover:#E9A585;--on-accent:#1A0F0A;
+    --accent-soft:#3A2A22;--on-accent-soft:#E9A585;
+    --inverse:#F3EEE2;--on-inverse:#1F2A24;
+    --success:#7DB68A;--warning:#D9A441;--danger:#E5877C;--info:#7FB0CC;
+    --success-soft:#1F3326;--warning-soft:#3A2F14;--danger-soft:#3D1F1B;--info-soft:#1A2C38;
+    --shadow:0 12px 32px rgba(0,0,0,.55);
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 16px/24px var(--sans)}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+@media(min-width:1024px){.wrap{padding:0 32px}}
+header.bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--border)}
+header.bar .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{font:600 22px var(--display);letter-spacing:-.01em}
+section{padding:48px 0;border-bottom:1px solid var(--border)}
+@media(min-width:1024px){section{padding:80px 0}}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;margin:0 0 16px}
+h1{font-size:36px;line-height:42px}h2{font-size:24px;line-height:30px}
+@media(min-width:1024px){h1{font-size:60px;line-height:66px}h2{font-size:32px;line-height:40px}}
+h3{font:600 18px/26px var(--sans);margin:0 0 8px}
+.overline{font:600 12px/16px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.lead{font-size:18px;line-height:28px;color:var(--muted);max-width:560px}
+em.it{font-family:var(--display);font-style:italic;font-weight:400;color:var(--accent)}
+.muted{color:var(--muted)}.small{font-size:14px;line-height:20px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.sw{border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}
+.sw i{display:block;height:56px;border-bottom:1px solid var(--border)}
+.sw div{padding:8px 10px;font:500 12px/16px var(--sans)}
+.sw code{display:block;color:var(--muted);font-weight:400}
+.btn{font:500 14px/20px var(--sans);min-height:44px;padding:0 20px;border-radius:10px;border:1px solid transparent;cursor:pointer;color:inherit;background:none}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.primary{background:var(--accent);color:var(--on-accent)}.primary:hover{background:var(--accent-hover)}
+.secondary{background:var(--surface);border-color:var(--strong);color:var(--text)}
+.ghost{color:var(--accent)}
+.danger{background:var(--danger);color:var(--on-accent)}
+.btn:disabled{background:var(--sunken);color:var(--subtle);border-color:transparent;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px}
+@media(min-width:1024px){.card{padding:24px}}
+label{display:block;font:500 14px/20px var(--sans);margin-bottom:6px}
+input,select,textarea{width:100%;min-height:48px;padding:0 14px;border-radius:10px;border:1px solid var(--strong);background:var(--surface);color:var(--text);font:400 16px/24px var(--sans)}
+textarea{padding:12px 14px;min-height:96px}
+input::placeholder{color:var(--subtle)}
+input.err{border-color:var(--danger)}
+.msg-err{color:var(--danger);font-size:14px;margin-top:6px}
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;font:500 12px/20px var(--sans)}
+.b-n{background:var(--sunken);color:var(--muted)}.b-a{background:var(--accent-soft);color:var(--on-accent-soft)}
+.b-s{background:var(--success-soft);color:var(--success)}.b-w{background:var(--warning-soft);color:var(--warning)}
+.b-d{background:var(--danger-soft);color:var(--danger)}.b-i{background:var(--info-soft);color:var(--info)}
+.chip{min-height:36px;padding:0 14px;border-radius:9999px;border:1px solid var(--strong);background:none;color:var(--text);font:500 14px var(--sans);cursor:pointer}
+.chip[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--on-accent-soft)}
+.seg{display:inline-flex;background:var(--sunken);border-radius:10px;padding:3px}
+.seg button{min-height:40px;padding:0 16px;border:1px solid transparent;border-radius:8px;background:none;color:var(--muted);font:500 14px var(--sans);cursor:pointer}
+.seg button[aria-checked=true]{background:var(--surface);border-color:var(--border);color:var(--text)}
+.steps{display:flex;align-items:center;gap:0}
+.dot{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:600 13px var(--sans);border:1.5px solid var(--strong);color:var(--muted)}
+.dot.done{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.dot.now{border-color:var(--accent);color:var(--accent)}
+.line{flex:1;height:2px;background:var(--strong);opacity:.5}.line.done{background:var(--accent);opacity:1}
+.job{list-style:none;margin:0;padding:0}.job li{display:flex;gap:10px;padding:8px 0;color:var(--muted)}
+.job li.ok{color:var(--text)}.job li.now{color:var(--text);font-weight:500}
+.sk{background:var(--sunken);border-radius:6px;height:14px;margin:8px 0}
+.price{font:600 40px/48px var(--display)}
+.price-card.pro{border:1.5px solid var(--accent)}
+ul.chk{list-style:none;padding:0;margin:16px 0}ul.chk li{padding:4px 0}ul.chk li:before{content:"✓ ";color:var(--accent);font-weight:600}
+.inv{display:flex;gap:12px}.thumb{width:72px;aspect-ratio:4/5;border-radius:10px;border:1px solid var(--border);background:var(--sunken)}
+.guest{display:flex;align-items:center;gap:12px;min-height:64px;border-bottom:1px solid var(--border)}
+.av{width:36px;height:36px;border-radius:50%;background:var(--sunken);color:var(--muted);display:grid;place-items:center;font:500 13px var(--sans)}
+.guest .grow{flex:1}
+.toast{display:inline-block;background:var(--raised);border:1px solid var(--border);border-radius:10px;padding:12px 16px;box-shadow:0 4px 16px rgba(0,0,0,.12);font-size:14px}
+.modal{max-width:420px;background:var(--raised);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:var(--shadow)}
+.inverse{background:var(--inverse);color:var(--on-inverse);border-radius:16px;padding:32px}
+.empty{text-align:center;padding:32px}
+.type-row{display:flex;gap:24px;align-items:baseline;border-bottom:1px solid var(--border);padding:12px 0;flex-wrap:wrap}
+.type-row code{width:90px;color:var(--muted);font-size:12px}
+.theme-btn{min-height:44px}
+.no{border:1px dashed var(--strong);border-radius:10px;padding:12px 16px;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<header class="bar"><div class="wrap">
+  <span class="logo">CartaAI</span>
+  <div class="row">
+    <span class="small muted">Pratinjau design system</span>
+    <button class="btn secondary theme-btn" id="theme" aria-pressed="false">Mode gelap</button>
+  </div>
+</div></header>
+
+<main class="wrap">
+<section>
+  <div class="overline">Undangan pernikahan digital</div>
+  <h1>Undangan pernikahanmu, <em class="it">siap dibagikan</em> dalam hitungan menit.</h1>
+  <p class="lead">Isi data mempelai dan acara. Kami menyusun undangannya, kamu tinggal membagikan link-nya ke tamu.</p>
+  <div class="row" style="margin-top:24px">
+    <button class="btn primary" style="min-height:52px;padding:0 24px;font-size:16px">Buat undangan gratis</button>
+    <button class="btn ghost">Lihat contoh</button>
+  </div>
+  <p class="small muted" style="margin-top:16px">Tanpa kartu kredit. Gratis 30 hari.</p>
+</section>
+
+<section>
+  <h2>Warna</h2>
+  <p class="muted">Satu aksen: terracotta. Aksen kedua tidak ada; hijau tua hanya netral gelap.</p>
+  <div class="grid g3" id="swatches"></div>
+</section>
+
+<section>
+  <h2>Tipografi</h2>
+  <div class="type-row"><code>display</code><span style="font:600 clamp(36px,6vw,60px)/1.1 var(--display)">Rina &amp; Dimas</span></div>
+  <div class="type-row"><code>h1</code><span style="font:600 clamp(30px,4vw,44px)/1.15 var(--display)">Judul halaman</span></div>
+  <div class="type-row"><code>h2</code><span style="font:600 24px/30px var(--display)">Judul bagian</span></div>
+  <div class="type-row"><code>h3 (Inter)</code><span style="font:600 18px/26px var(--sans)">Judul kartu</span></div>
+  <div class="type-row"><code>body</code><span>Isi teks sepanjang 16px, nyaman dibaca di layar kecil maupun lebar.</span></div>
+  <div class="type-row"><code>bodySm</code><span class="small">Teks bantu dan baris tabel, 14px.</span></div>
+  <div class="type-row"><code>caption</code><span style="font:500 12px/16px var(--sans)" class="muted">Metadata 12px</span></div>
+</section>
+
+<section>
+  <h2>Tombol, chip, segmented, badge</h2>
+  <div class="row" style="margin-bottom:16px">
+    <button class="btn primary">Buat undangan</button>
+    <button class="btn secondary">Simpan draf</button>
+    <button class="btn ghost">Lewati</button>
+    <button class="btn danger">Hapus undangan</button>
+    <button class="btn primary" disabled>Nonaktif</button>
+  </div>
+  <div class="row" style="margin-bottom:16px" id="chips">
+    <button class="chip" aria-pressed="true">Semua</button><button class="chip" aria-pressed="false">Hadir</button><button class="chip" aria-pressed="false">Belum dibuka</button>
+  </div>
+  <div class="seg" role="radiogroup" aria-label="Tema" id="seg" style="margin-bottom:16px">
+    <button role="radio" aria-checked="false">Terang</button><button role="radio" aria-checked="false">Gelap</button><button role="radio" aria-checked="true">Sistem</button>
+  </div>
+  <div class="row">
+    <span class="badge b-n">Draf</span><span class="badge b-a">Premium</span><span class="badge b-s">Aktif</span>
+    <span class="badge b-w">Menunggu pembayaran</span><span class="badge b-d">Kedaluwarsa</span><span class="badge b-i">Diproses</span>
+  </div>
+</section>
+
+<section>
+  <h2>Form</h2>
+  <div class="grid g2">
+    <div class="card">
+      <div style="margin-bottom:16px"><label for="n">Nama mempelai pria</label><input id="n" placeholder="Contoh: Dimas Pratama"></div>
+      <div style="margin-bottom:16px"><label for="d">Tanggal akad</label><input id="d" value="12 Desember 2026" readonly></div>
+      <div><label for="e">Email</label><input id="e" class="err" value="rina@" aria-invalid="true"><div class="msg-err" role="alert">Email belum lengkap. Contoh: nama@email.com</div></div>
+    </div>
+    <div class="card">
+      <label for="t">Kata pengantar <span class="muted">(opsional)</span></label>
+      <textarea id="t" placeholder="Ceritakan singkat tentang kalian"></textarea>
+      <div style="margin-top:16px"><label for="s">Gaya</label><select id="s"><option>Bebas</option><option>Klasik hangat</option></select></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Progres</h2>
+  <div class="grid g2">
+    <div class="card">
+      <h3>Form generator</h3>
+      <div class="steps" aria-label="Langkah 3 dari 5"><div class="dot done">✓</div><div class="line done"></div><div class="dot done">✓</div><div class="line done"></div><div class="dot now">3</div><div class="line"></div><div class="dot">4</div><div class="line"></div><div class="dot">5</div></div>
+      <p class="small muted" style="margin-bottom:0">Langkah 3 dari 5 · Gaya</p>
+    </div>
+    <div class="card">
+      <h3>Menyusun undanganmu</h3>
+      <ul class="job"><li class="ok">✓ Data diterima</li><li class="now">◌ Menyusun desain</li><li>○ Memeriksa hasil</li><li>○ Menyiapkan link</li></ul>
+      <p class="small muted" style="margin:0">Biasanya 20-40 detik.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Kartu domain</h2>
+  <div class="grid g2">
+    <div class="card"><div class="inv"><div class="thumb"></div><div>
+      <div style="font:600 20px/26px var(--display)">Rina &amp; Dimas</div>
+      <div class="small muted">12 Des 2026 · /u/rina-dimas</div>
+      <div class="row" style="gap:6px;margin:8px 0"><span class="badge b-s">Aktif</span><span class="badge b-a">Premium</span></div>
+      <div class="row" style="gap:8px"><button class="btn primary" style="min-height:44px">Salin link</button><button class="btn secondary">Tamu</button></div>
+    </div></div></div>
+    <div class="card">
+      <div class="guest"><div class="av">RA</div><div class="grow"><div style="font-weight:500">Rina Anggraeni</div><div class="small muted">Keluarga · 2 orang</div></div><span class="badge b-s">Hadir</span></div>
+      <div class="guest"><div class="av">BS</div><div class="grow"><div style="font-weight:500">Budi Santoso</div><div class="small muted">Kantor</div></div><span class="badge b-n">Belum dibuka</span></div>
+      <div class="guest" style="border:0"><div class="av">LM</div><div class="grow"><div style="font-weight:500">Lina Mamuaya</div><div class="small muted">Sahabat</div></div><span class="badge b-w">Ragu</span></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Harga</h2>
+  <div class="grid g2" style="max-width:840px">
+    <div class="card price-card"><div class="overline" style="color:var(--muted)">Gratis</div><div class="price">Rp0</div><p class="small muted">Cukup untuk undangan sederhana.</p>
+      <ul class="chk"><li>Data inti mempelai dan acara</li><li>Aktif 30 hari</li><li>Maksimal 50 tamu</li></ul><button class="btn secondary" style="width:100%">Mulai gratis</button></div>
+    <div class="card price-card pro"><div class="row" style="justify-content:space-between"><div class="overline" style="margin:0">Premium</div><span class="badge b-a">Paling dipilih</span></div><div class="price">Rp99.000</div><p class="small muted">Sekali bayar untuk satu undangan.</p>
+      <ul class="chk"><li>Foto, galeri, dan musik</li><li>Amplop digital</li><li>Tanpa watermark</li><li>Aktif 1 tahun, tamu tak terbatas</li></ul><button class="btn primary" style="width:100%">Pilih Premium</button></div>
+  </div>
+</section>
+
+<section>
+  <h2>Modal, toast, skeleton, kosong</h2>
+  <div class="grid g2">
+    <div><div class="modal"><h3 style="font:600 24px/30px var(--display)">Hapus undangan ini?</h3><p class="muted">Linknya akan berhenti aktif dan tidak bisa dikembalikan.</p><div class="row" style="justify-content:flex-end"><button class="btn ghost">Batal</button><button class="btn danger">Hapus</button></div></div>
+      <p style="margin-top:16px"><span class="toast">Link undangan disalin.</span></p></div>
+    <div>
+      <div class="card"><div class="sk" style="width:60%"></div><div class="sk"></div><div class="sk" style="width:80%"></div></div>
+      <div class="card empty" style="margin-top:16px"><h3>Belum ada undangan</h3><p class="muted small">Mulai dari data mempelai.</p><button class="btn primary">Buat undangan</button></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Yang dilarang</h2>
+  <div class="grid g3">
+    <div class="no">Gradien ungu atau gradien apa pun di tombol/kartu</div>
+    <div class="no">Glassmorphism dan bayangan tebal</div>
+    <div class="no">Emoji dan ikon bulat di setiap judul</div>
+  </div>
+  <div class="inverse" style="margin-top:32px"><h2 style="margin:0 0 8px">Siap membuat undanganmu?</h2><p style="margin:0 0 16px;opacity:.9">Mulai gratis, upgrade hanya bila perlu.</p><button class="btn" style="background:var(--on-inverse);color:var(--inverse)">Buat undangan</button></div>
+</section>
+</main>
+
+<script>
+const sw=[["bg","Latar halaman"],["surface","Kartu"],["sunken","Cekung"],["text","Teks"],["muted","Teks sekunder"],["border","Garis"],["strong","Garis input"],["accent","Aksen"],["accent-hover","Aksen hover"],["accent-soft","Aksen lembut"],["inverse","Inverse"],["success","Sukses"],["warning","Peringatan"],["danger","Bahaya"],["info","Info"]];
+const root=document.documentElement,g=document.getElementById('swatches');
+function paint(){g.innerHTML='';const cs=getComputedStyle(root);sw.forEach(([k,l])=>{const v=cs.getPropertyValue('--'+k).trim().toUpperCase();g.insertAdjacentHTML('beforeend',`<div class="sw"><i style="background:var(--${k})"></i><div>${l}<code>--${k} ${v}</code></div></div>`)})}
+const btn=document.getElementById('theme');
+function set(t){root.dataset.theme=t;btn.textContent=t==='dark'?'Mode terang':'Mode gelap';btn.setAttribute('aria-pressed',t==='dark');paint()}
+set(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+btn.onclick=()=>set(root.dataset.theme==='dark'?'light':'dark');
+document.querySelectorAll('#chips .chip').forEach(c=>c.onclick=()=>c.setAttribute('aria-pressed',c.getAttribute('aria-pressed')!=='true'));
+document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#seg button').forEach(x=>x.setAttribute('aria-checked',x===b))});
+</script>
+</body>
+</html>

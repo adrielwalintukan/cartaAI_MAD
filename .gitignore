@@ -11,3 +11,8 @@ __pycache__
 # OS-specific
 .DS_Store
 Thumbs.db
+
+# venv lokal
+.venv*/
+.pytest_cache/
+.coverage

@@ -1,7 +1,6 @@
-import { Redirect } from "expo-router";
+import { Redirect } from 'expo-router';
 
+// Situs publik (landing, template, harga) ada di project web/ (Next.js). Aplikasi langsung ke area login; guard mengalihkan ke /masuk bila belum masuk.
 export default function Index() {
-  // Langsung arahkan ke pintu masuk utama (Tabs)
-  // Pengguna bisa melihat Beranda tanpa harus login
-  return <Redirect href="/(tabs)" />;
+  return <Redirect href="/app" />;
 }

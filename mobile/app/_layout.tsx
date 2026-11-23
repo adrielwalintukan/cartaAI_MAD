@@ -1,38 +1,43 @@
-import { Stack } from "expo-router";
-import { AuthProvider } from "../src/context/AuthContext";
-import { DarkModeProvider } from "../src/context/DarkModeContext";
-import { View, ActivityIndicator } from "react-native";
-import { useAuth } from "../src/context/AuthContext";
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import { QueryClientProvider } from '@tanstack/react-query';
+import React, { useEffect } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ToastProvider } from '../src/components/ui';
+import { AuthProvider } from '../src/features/auth';
+import { queryClient } from '../src/lib/queryClient';
+import { ThemeProvider, useAppFonts, useTheme } from '../src/theme';
 
-function RootLayoutNav() {
-  const { loading } = useAuth();
+SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#6366f1" />
-      </View>
-    );
-  }
-
+function ThemedStack() {
+  const { isDark, colors } = useTheme();
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="login" options={{ animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="register" options={{ animation: 'slide_from_right' }} />
-      <Stack.Screen name="forgot-password" />
-      <Stack.Screen name="update-password" />
-      <Stack.Screen name="(tabs)" />
-    </Stack>
+    <>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
+    </>
   );
 }
 
 export default function RootLayout() {
+  const fontsReady = useAppFonts();
+  useEffect(() => { if (fontsReady) SplashScreen.hideAsync().catch(() => undefined); }, [fontsReady]);
+  if (!fontsReady) return null;
+
+  // Urutan: Theme → QueryClient → Auth (docs/08 F2-4).
   return (
-    <AuthProvider>
-      <DarkModeProvider>
-        <RootLayoutNav />
-      </DarkModeProvider>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <ToastProvider>
+              <ThemedStack />
+            </ToastProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
