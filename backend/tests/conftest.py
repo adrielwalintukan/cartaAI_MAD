@@ -6,6 +6,8 @@ os.environ.update({
     "GEMINI_API_KEY": "gem-main-key", "GEMINI_API_KEY_FALLBACK": "gem-fallback-key", "MIDTRANS_SERVER_KEY": "mid-server-key",
     "WEB_BASE_URL": "https://web.test", "PUBLIC_API_BASE_URL": "https://api.test",
     "CORS_ALLOWED_ORIGINS": "https://web.test", "MAX_INVITATIONS_PER_USER": "5",
+    # Opsional: kosongkan eksplisit agar nilai di backend/.env pengembang tidak bocor ke tes.
+    "PUBLIC_SITE_URL": "", "TRUSTED_PROXY_COUNT": "1",
 })
 
 import pytest  # noqa: E402
