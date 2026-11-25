@@ -7,6 +7,9 @@ import { supabase } from '../../../lib/supabase';
 import { useTheme } from '../../../theme';
 import { useAuth } from '../useAuth';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const GOOGLE_G = require('../../../../assets/google-g.png');
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function AuthFrame({ title, subtitle, children, footer }: { title: string; subtitle: string; children: React.ReactNode; footer?: React.ReactNode }) {
@@ -54,7 +57,7 @@ export function LoginScreen() {
       <TextField label="Password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" onSubmitEditing={submit} error={error ?? undefined} />
       <Link href="/lupa-password"><Text variant="bodySm" color="accent">Lupa password?</Text></Link>
       <Button label="Masuk" size="lg" fullWidth loading={busy} disabled={!email || !password} onPress={submit} />
-      <Button label="Lanjut dengan Google" variant="secondary" size="lg" fullWidth disabled={busy} onPress={() => run(signInWithGoogle)} />
+      <Button label="Lanjut dengan Google" iconImage={GOOGLE_G} variant="secondary" size="lg" fullWidth disabled={busy} onPress={() => run(signInWithGoogle)} />
     </AuthFrame>
   );
 }
@@ -91,7 +94,7 @@ export function RegisterScreen() {
       <TextField label="Password" hint="Minimal 8 karakter." value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" />
       <TextField label="Ulangi password" value={confirm} onChangeText={setConfirm} secureTextEntry autoComplete="new-password" onSubmitEditing={submit} error={error ?? undefined} />
       <Button label="Daftar" size="lg" fullWidth loading={busy} disabled={!email || !password || !confirm} onPress={submit} />
-      <Button label="Daftar dengan Google" variant="secondary" size="lg" fullWidth disabled={busy} onPress={() => run(signInWithGoogle)} />
+      <Button label="Daftar dengan Google" iconImage={GOOGLE_G} variant="secondary" size="lg" fullWidth disabled={busy} onPress={() => run(signInWithGoogle)} />
     </AuthFrame>
   );
 }

@@ -1,6 +1,7 @@
+import { Image } from 'expo-image';
 import { Link, type Href } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View, type ImageSourcePropType, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 import { useTheme, type Colors } from '../../theme';
 import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
@@ -15,6 +16,8 @@ export type ButtonProps = Omit<PressableProps, 'children' | 'style'> & {
   size?: ButtonSize;
   iconLeft?: IconName;
   iconRight?: IconName;
+  /** Ikon berupa gambar berwarna (mis. logo Google); menggantikan iconLeft. */
+  iconImage?: ImageSourcePropType;
   loading?: boolean;
   fullWidth?: boolean;
   /** Bila diisi, tombol menjadi tautan (<a href> di web). */
@@ -26,7 +29,7 @@ const HEIGHT = { sm: 36, md: 44, lg: 52 } as const;
 const PAD = { sm: 16, md: 20, lg: 24 } as const;
 
 export function Button({
-  label, variant = 'primary', size = 'md', iconLeft, iconRight, loading, fullWidth, href, disabled, onPress, style, ...rest
+  label, variant = 'primary', size = 'md', iconLeft, iconRight, iconImage, loading, fullWidth, href, disabled, onPress, style, ...rest
 }: ButtonProps) {
   const { colors, radius, border, t } = useTheme();
   const ring = useFocusRing();
@@ -95,6 +98,8 @@ export function Button({
           <>
             {loading ? (
               <View style={{ width: 20, alignItems: 'center' }}><ActivityIndicator size="small" color={colors[fg]} /></View>
+            ) : iconImage ? (
+              <Image source={iconImage} style={{ width: 20, height: 20 }} contentFit="contain" accessibilityIgnoresInvertColors />
             ) : iconLeft ? <Icon name={iconLeft} color={fg} /> : null}
             <Text
               variant="label"
